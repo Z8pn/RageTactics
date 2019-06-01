@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8"/>
+        <title>RageMP</title>
+        <script src="js/jquery-3.3.1.min.js"></script>
+        <link href="css/jquery-ui.min.css" rel="stylesheet"/>
+        <script src="js/jquery-ui.min.js"></script>
+        <script src="js/md5.min.js"></script>
+
+        <link type="text/css" rel="stylesheet" href="css/font_awesome.css"  media="screen,projection"/>
+        <link type="text/css" rel="stylesheet" href="css/materialize.min.css"  media="screen,projection"/>
+        <link type="text/css" rel="stylesheet" href="css/iziToast.min.css"  media="screen,projection"/>
+        <link type="text/css" rel="stylesheet" href="css/slick.css"  media="screen,projection"/>
+        <link type="text/css" rel="stylesheet" href="css/slick-theme.css"  media="screen,projection"/>
+        <script type="text/javascript" src="js/slick.min.js"></script>
+        <script type="text/javascript" src="js/iziToast.min.js"></script>
+        <script type="text/javascript" src="js/materialize.min.js"></script>
+        <link href="css/style.css" rel="stylesheet"/>
+    </head>
+    <body>
+<!--     	<div id="scoreboard">
+    		<div class="group">
+    			<div class="name">
+    				
+    			</div>
+    		</div>
+    	</div> -->
+        <div id="loading">
+            <div></div><div></div><div></div><div></div>
+        </div>
+        <div id="login" style="display:none">
+            <span class="headline">Please Login or register</span>
+
+            <div class="row" id="alert" style="display:none">
+                <div class="col s10 push-s1 red" id="alert_text">
+                    asdf
+                </div>
+            </div>
+            <div class="row">
+                <input placeholder="Username" id="join_username" type="text" class="input-field col s10 push-s1 validate">
+                <label for="join_username">Username</label>
+            </div>
+            <div class="row">
+                <input minlength="3" placeholder="Password" id="join_password" type="password" class="input-field col s10 push-s1 validate">
+                <label for="join_password">Password</label>
+            </div>
+            <div class="row">
+                <div class="col s10 push-s1">
+                  <button class="col s5 btn waves-effect waves-light green" onclick="Account.login()">Login</button>
+                  <button class="col s5 push-s2 btn waves-effect waves-light deep-orange" onclick="Account.register()">Register</button>
+                </div>
+            </div>
+        </div>
+        <div id="team" style="display:none">
+            <div class="skin_select">
+                <a class="waves-effect waves-light btn red lighten-1" onclick="Teams.prevSkin()"><i class="fas fa-arrow-left"></i></a>
+                <div class="skin" id="skin_name">
+                    Balals Girl
+                </div>
+                <a class="waves-effect waves-light btn red lighten-1" onclick="Teams.nextSkin()"style="float:right"><i class="fas fa-arrow-right"></i></a>
+            </div>
+            <div class="team_select">
+                <a class="waves-effect waves-light btn red lighten-1" onclick="Teams.prevTeam()"><i class="fas fa-arrow-left"></i></a>
+                <div class="team" id="team_name">
+                    Ballas Family
+                </div>
+                <a class="waves-effect waves-light btn red lighten-1" onclick="Teams.nextTeam()" style="float:right"><i class="fas fa-arrow-right"></i></a>
+            </div>
+            <div class="select_final">
+                <a class="waves-effect waves-light btn red lighten-1" onclick="Teams.selectTeam()"><i class="fas fa-sign-in-alt"></i> <span class="text valign-wrapper">Join Team</span></a>
+            </div>
+        </div>
+        <div id="shop" style="display:none">
+            <div class="headline">
+                Weapon Shop
+            </div>
+            <div class="buyable_weapons">
+                <div class="item" data-weapon="weapon_carbinerifle" data-price="700">
+                    <div class="image"><img src="./img/weapon_snspistol.png"></img></div>
+                    <div class="name">Carabine Rifle</div>
+                    <div class="price">$1000</div>
+                    <div class="ammo">10 Magazines</div>
+                    <div class="buy">
+                        <span>Buy</span>
+                    </div>
+                </div>
+                <div class="item">
+                    <div class="image"><img src="./img/weapon_smg.png"></img></div>
+                    <div class="name">SMG</div>
+                    <div class="price">$1000</div>
+                    <div class="ammo">10 Magazines</div>
+                    <div class="buy">
+                        <span>Buy</span>
+                    </div>
+                </div>
+                <div class="item">
+                    <div class="image"><img src="./img/weapon_assaultrifle.png"></img></div>
+                    <div class="name">Assault Rifle</div>
+                    <div class="price">$1000</div>
+                    <div class="ammo">10 Magazines</div>
+                    <div class="buy">
+                        <span>Buy</span>
+                    </div>
+                </div>
+                <div class="item">
+                    <div class="image"><img src="./img/weapon_carbinerifle.png"></img></div>
+                    <div class="name">Carabine Rifle</div>
+                    <div class="price">$1000</div>
+                    <div class="ammo">10 Magazines</div>
+                    <div class="buy">
+                        <span>Buy</span>
+                    </div>
+                </div>
+                <div class="item">
+                    <div class="image"><img src="./img/weapon_carbinerifle.png"></img></div>
+                    <div class="name">Carabine Rifle</div>
+                    <div class="price">$1000</div>
+                    <div class="ammo">10 Magazines</div>
+                    <div class="buy">
+                        <span>Buy</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="vehicle_spawner" style="display:none">
+            <div class="headline">
+                Vehicle Spawner
+            </div>
+            <div class="row">
+                <div class="spawnable col s8 push-s2"  >
+                    <label>Fahrzeug:</label>
+                    <select data-role="select" size="2" id="vehicles"></select>
+                </div>
+            </div>
+
+            <div class="buy_dialog row">
+            <div class="container">
+                <button class="spawner col s8 push-s2 btn waves-effect waves-light green" onclick="VehicleShop.buy()">Spawn Vehicle</button>
+                <button class="spawner col s2 push-s4 btn waves-effect waves-light red" onclick="VehicleShop.close()">Close</button>
+            </div>
+            </div>
+        </div>
+        <div id="progress" style="display:none">
+            <div class="headline">
+                Level Progress
+            </div>
+            <div class="level_progress">
+                <div class="level">
+                    Current Level: 16
+                </div>
+                <div class="next-level">
+                    Next Level: 17
+                </div>
+                <div class="progress-bar stripes">
+                    <span class="green" style="width: 40%"></span>
+                </div>
+                <div class="points">
+                    250EXP/425EXP
+                </div>
+            </div>
+        </div>
+
+        <script src="js/app.js">
+        </script>
+    </body>
+</html>
