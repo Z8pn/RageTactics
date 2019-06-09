@@ -1,11 +1,13 @@
+const absolute_path = "package://RageTactics/cef/views/";
 class CEFBrowser {
     constructor(url) {
         this._setup(url);
     }
     _setup(url) {
         let self = this;
-        self.browser = mp.browsers.new(url);
+        self.browser = mp.browsers.new(absolute_path + url);
         self.cursorState = false;
+       // console.log("new instance");
 
     }
     call() {
@@ -31,7 +33,6 @@ class CEFBrowser {
                         break;
                     }
             }
-            // callArgs += "\'"+ args[i]+"\'";
             if (i < (args.length - 1)) {
                 callArgs += ",";
             }
@@ -39,7 +40,6 @@ class CEFBrowser {
         callArgs += ");";
         full += callArgs;
         this.browser.execute(full);
-        //mp.gui.chat.push(full);
     }
     active(toggle) {
         this.browser.active = toggle;
@@ -51,5 +51,18 @@ class CEFBrowser {
         this.cursorState = state;
         mp.gui.cursor.visible = state;
     }
+    clear() {
+        this.load("empty.html")
+    }
+    load(path) {
+        let self = this;
+        self.browser.url = absolute_path + path;
+    }
 }
-module.exports = CEFBrowser;
+module.exports = {
+    interface:new CEFBrowser("empty.html"),
+    storage:new CEFBrowser("empty.html"),
+    hud:new CEFBrowser("empty.html"),
+    notification:new CEFBrowser("notifications/index.html"),
+    class:CEFBrowser
+};
