@@ -36,9 +36,9 @@ mp.events.add("ServerAccount:Login", function(player, username, password) {
         players[player.id].login(username, password)
     }
 });
-mp.events.add("ServerAccount:Register", function(player, username, hash_password, salt) {
+mp.events.add("ServerAccount:Register", function(player, username, password) {
     if (players[player.id]) {
-        players[player.id].register(username, hash_password, salt)
+        players[player.id].register(username, password)
     }
 });
 
