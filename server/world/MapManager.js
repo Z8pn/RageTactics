@@ -1,5 +1,5 @@
 const fs = require('fs');
-var MapManager = new class {
+var MapManager = class {
 	constructor() {
 		let self = this;
 		this._loadedMaps = [];
@@ -45,3 +45,4 @@ var MapManager = new class {
 		});
 	}
 }
+module.exports = new MapManager();
