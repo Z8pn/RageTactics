@@ -15,8 +15,17 @@ var MapManager = class {
 		if (map) {
 			return {
 				spawns: map.spawnpoints || [],
-				objects: map.objects || [];
+				objects: map.objects || [],
+				teams: map.teams || [{
+					name: "Team 1",
+					clothing: []
+				},{
+					name: "Team 2",
+					clothing: []
+				}]
 			}
+		} else {
+			return false;
 		}
 	}
 	isMapLoaded(fileName) {

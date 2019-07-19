@@ -1,4 +1,12 @@
 module.exports = {
-	name:"testMap",
-	objects : []
+	name: "testMap",
+	objects: [],
+	teams: [{
+		name: "Attackers",
+		clothing: []
+	}, {
+		name: "Defenders",
+		clothing: []
+	}],
+	spawns
 }
