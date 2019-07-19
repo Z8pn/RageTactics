@@ -1,7 +1,8 @@
 var MongoDB = require("../libs/mongodb.js")
 var Damage = require("./damage.js")
-var Teams = require("./teams.js")
-var Weapons = require("./weapons.js")
+var LobbyManager = require("./lobby.js")
+//var Weapons = require("./weapons.js")
+var MapManager = require("../world/MapManager.js")
 var md5 = require("md5")
 var async = require("async")
 var User = MongoDB.getUserModel();
@@ -16,6 +17,8 @@ var Player = class {
         self._username = undefined;
         self._lobby = undefined;
         self._dbUser = undefined;
+        self._spawned = false;
+        self._lobbySelection = false;
     }
     log(...args) {
         console.log("Account:Log", args)
@@ -34,6 +37,11 @@ var Player = class {
     }
     showLobby() {
         var self = this;
+        let allMaps = MapManager.maps;
+        let current_lobbies = LobbyManager.lobbies;
+        self._lobbySelection = true;
+        self._player.setVariable("current_status","lobby");
+        self._player.call("UI:Lobbies", [allMaps,current_lobbies])
     }
     register(name, password) {
         var self = this;
