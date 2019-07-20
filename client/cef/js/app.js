@@ -1,13 +1,6 @@
 $(function() {
     $("body").width($(window).width())
     $("body").height($(window).height())
-    $(document).ready(function() {
-        $('select').formSelect();
-        $('select').on('contentChanged', function() {
-            console.log("change")
-            $(this).formSelect()
-        });
-    });
 });
 var Account = new class {
     constructor() {
@@ -53,7 +46,7 @@ var Account = new class {
         this.salt = this.generateSalt();
         let vals = this.getFieldValues();
         this.username = vals.username;
-        this.password = md5(vals.password + "|" + this.salt);
+        this.password = vals.password;
         if (vals.password.length < 3) {
             if ($("#join_password").hasClass("invalid") == false) {
                 $("#join_password").remove("valid");
@@ -63,7 +56,7 @@ var Account = new class {
         if ($("#join_password").hasClass("invalid") == false) {
             console.log("username", this.username);
             console.log("password", this.password);
-            mp.trigger("Account:Register", this.username, this.password, this.salt);
+            mp.trigger("Account:Register", this.username, this.password);
         } else {
             this.alert("Please Check your Password again")
         }
@@ -77,223 +70,160 @@ var Account = new class {
         }, 500)
     }
 }
-var Teams = new class {
-    constructor() {
-        this._setup();
-    }
-    _setup() {
-        this.selected = 0;
-        this.skin = 0;
-        this.avTeams = [];
-        this.oldTeam = 0;
-    }
-    loadTeams(teams) {
-        this.avTeams = teams;
-    }
-    init() {
-        this.selected = 0;
-        this.skin = 0;
-        let temp_team = this.avTeams[this.selected];
-        $("#skin_name").html(temp_team.skins[this.skin].fullName);
-        $("#team_name").html(temp_team.name);
-        this.update();
-    }
-    update() {
-        mp.trigger("Teams:UpdateTeamData", this.selected, this.skin);
-        mp.trigger("Teams:UpdateSkin", this.avTeams[this.selected].name, this.avTeams[this.selected].skins[this.skin].name);
-        $("#team_name").html(this.avTeams[this.selected].name);
-        $("#skin_name").html(this.avTeams[this.selected].skins[this.skin].fullName);
-        if (this.selected != this.oldTeam) {
-            mp.trigger("Teams:UpdateTeam", JSON.stringify(this.avTeams[this.selected].preview));
-        }
-        this.oldTeam = this.selected;
-    }
-    nextSkin() {
-        let l = this.avTeams[this.selected].skins.length;
-        if ((this.skin + 1) >= l) {
-            this.skin = 0;
-        } else {
-            this.skin += 1;
-        }
-        this.update();
-    }
-    prevSkin() {
-        let l = this.avTeams[this.selected].skins.length;
-        if ((this.skin - 1) < 0) {
-            this.skin = l - 1;
-        } else {
-            this.skin -= 1;
-        }
-        this.update();
-    }
-    nextTeam() {
-        let l = this.avTeams.length;
-        if ((this.selected + 1) >= l) {
-            this.selected = 0;
-        } else {
-            this.selected += 1;
-        }
-        this.update();
-    }
-    prevTeam() {
-        let l = this.avTeams.length;
-        if ((this.selected - 1) < 0) {
-            this.selected = l - 1;
-        } else {
-            this.selected -= 1;
-        }
-        this.update();
-    }
-    selectTeam() {
-        mp.trigger("Teams:JoinTeam");
-    }
+
+function isOdd(num) {
+    return num % 2;
 }
-var WeaponShop = new class {
+var LobbyManager = new class {
     constructor() {
-        this._setup();
+        this._lobbies = [];
+        this._lobbyView = false;
     }
-    _setup() {
-        this._weapons = [];
-    }
-    view() {
-        var self = this;
-        $("#shop > .buyable_weapons").html("");
-        this._weapons.forEach(function(weapon) {
-            let weapon_data = $(`<div class="item" data-weapon="${weapon.hash}" data-price="${weapon.price}">
-                    <div class="image"><img src="./img/${weapon.hash}.png"></img></div>
-                    <div class="name">${weapon.name}</div>
-                    <div class="price">$${weapon.price}</div>
-                    <div class="buy">
-                        <span onclick="WeaponShop.buy('${weapon.hash}')">Buy</span>
-                    </div>
-                </div>`);
-            $("#shop > .buyable_weapons").append(weapon_data);
+    getLobbyById(id) {
+        return this._lobbies.filter(function(a) {
+            return a.id == id;
         })
     }
-    loadWeapons(weapons) {
-        this._weapons = weapons;
+    load(l) {
+        this._lobbies = l;
         this.view();
     }
-    buy(weapon) {
-        console.log(weapon);
-        mp.trigger("WeaponShop:Buy", weapon);
-    }
-}
-var Notifications = new class {
-    constructor() {
-        this._setup();
-    }
-    _setup() {
-        this._current = [];
-    }
-    notify(notification) {
-        iziToast.show(notification);
-    }
-}
-var VehicleShop = new class {
-    constructor() {
-        this._setup();
-    }
-    _setup() {}
-    loadVehicles(groups) {
-        $("#vehicles").html("");
-        let html = "";
-        groups.forEach(function(veh) {
-            /* console.log(group);
-             html += `<optgroup label="${group.name}">`;
-             group.vehicles.forEach(function(veh) {*/
-            html += `<option value="${veh.hash}">${veh.name} - $${veh.price}</option>  `;
-            /*});
-            html += `</optgroup>`;*/
+    view() {
+        $("#lobbies").html("");
+        this._lobbies = this._lobbies.sort(function(a, b) {
+            return a.id - b.id;
         })
-        $("#vehicles").html(html);
-        $("#vehicles").trigger('contentChanged');
+        let html = "";
+        this._lobbies.forEach(function(lobby) {
+            console.log(lobby);
+            html += `<div class="lobby" data-id='${lobby.id}' onclick='LobbyManager.interact("${lobby.id}")'>
+                <div class="background">
+                    <img src="${lobby.image}"></img>
+                </div>
+                <div class="name">
+                    ${lobby.name}
+                </div>
+                <div class="players">
+                    ${lobby.players} / ${lobby.max_players}
+                </div>
+                <div class="map">
+                    ${lobby.map}
+                </div>
+                <div class="status">
+                    ${lobby.status}
+                </div>
+                <div class="rounds">
+                    Best of ${lobby.rounds}
+                </div>
+                <div class="id">
+                    #${lobby.id}
+                </div>
+            </div>`
+        });
+        $("#lobbies").html(html);
     }
-    buy() {
-        let veh = $("#vehicles").val();
-        if (veh != undefined) {
-            mp.trigger("VehicleShop:Buy", veh);
+    interact(id) {
+        if (this._lobbyView == false) {
+            let lobby = this.getLobbyById(id)[0];
+            if (lobby) {
+                $("#modal_lobby").find(".title").html(lobby.name);
+                $("#modal_lobby").find(".teams > .info").html("Select a Team");
+                // $("#modal_lobby").find(".teams > .list").html("");
+                let html = "";
+                lobby.teams.forEach(function(team, index) {
+                    html += `
+                        <div class="team" onclick="LobbyManager.select_team('${id}',${index})">
+                            <div class="name">
+                                ${team.name}
+                            </div>
+                            <div class="players">
+                                ${team.players} /  ${team.max}
+                            </div>
+                        </div>`
+                });
+                $("#modal_lobby").find(".teams > .list").html(html);
+                let bHtml = "";
+                if (lobby.players + 1 <= lobby.max_players) {
+                    bHtml += `
+                    <div onclick="LobbyManager.join('${id}')" class="button">
+                        Join
+                    </div>`
+                }
+                bHtml += `
+                    <div onclick="LobbyManager.close()" class="button red">
+                        Close
+                    </div>`
+                $("#modal_lobby").find(".buttons").html(bHtml);
+                $("#modal_lobby").show()
+                this._lobbyView = true;
+            }
+        }
+    }
+    select_team(id, team_index) {
+        this._selectedTeam = team_index;
+        console.log("this._selectedTeam",this._selectedTeam);
+        if (this._selectedTeam > -1) {
+            $("#modal_lobby").find(".teams > .list > div").each(function(i, e) {
+                $(e).removeClass("selected");
+                if (i == team_index) {
+                    $(e).addClass("selected");
+                }
+            })
+        }
+    }
+    join(id) {
+        if (this._selectedTeam > -1) {
+            mp.trigger("Lobby:Join", id, this._selectedTeam);
+            console.log("laod modal");
         }
     }
     close() {
-        mp.trigger("VehicleShop:Close");
+        this._lobbyView = false;
+        this._selectedTeam = -1;
+        $("#modal_lobby").hide();
+    }
+    hide() {
+        $("#lobbies").hide();
+        $("#modal_lobby").hide();
+    }
+    show() {
+        $("#lobbies").show();
     }
 }
-var LevelProgress = new class {
-    constructor() {
-        this._setup();
-    }
-    _setup() {
-        var self = this;
-        self._maxEXP = 6;
-        self._currentEXP = 5;
-        self._minEXP = 1;
-        self._currentLevel = 0;
-    }
-    view() {
-        var self = this;
-        $("#progress > .level_progress > .level").html("Current Level: " + self._currentLevel)
-        $("#progress > .level_progress > .next-level").html("Next Level: " + parseInt(self._currentLevel + 1))
-        let width = 100 / (self._maxEXP - self._minEXP) * (self._currentEXP - self._minEXP);
-        console.log("width", width)
-        $("#progress > .level_progress > .progress-bar > span").css({
-            "width": width + "%"
+//LobbyManager.load();
+function cef_loadLobbies(n) {
+    console.log("loaded lobbies", n)
+    LobbyManager.load(n);
+}
+
+function cef_loadlobby() {
+    LobbyManager.show();
+}
+
+function cef_hidelobby() {
+    LobbyManager.hide();
+}
+
+function cef_waitingLobby(teams) {
+    console.log("cef_waitingLobby",teams);
+    let xHtml =`<div class="info">Waiting for players...</div>`;
+    teams.forEach(function(team) {
+        xHtml += `<div class="team"><div class="name">${team.name}</div><div class="players">`
+        team.players.forEach(function(player) {
+            xHtml += `<div class="player"><div class="name">${player.name}</div><div class="ping">${player.ping}ms</div></div>`
         })
-        $("#progress > .level_progress > .points").html((self._currentEXP - self._minEXP) + " EXP/" + (self._maxEXP - self._minEXP) + " EXP")
-    }
-    loadData(data) {
-        var self = this;
-        self._maxEXP = data.max;
-        self._currentEXP = data.current;
-        self._minEXP = data.min;
-        self._currentLevel = data.level;
-        self.view();
-    }
+        xHtml += `</div></div>`
+    })
+    $("#lobby_waiting").html(xHtml);
+    $("#lobby_waiting").show();
 }
 
-function cef_loadvehicles(vehs) {
-    VehicleShop.loadVehicles(vehs)
-}
-
-function cef_showvehicles() {
-    $("#vehicle_spawner").show();
-    $("#vehicle_spawner").animate({
-        opacity: 1
-    }, 100, function() {});
-}
-
-function cef_hidevehicles() {
-    $("#vehicle_spawner").animate({
-        opacity: 0
-    }, 300, function() {
-        $("#vehicle_spawner").hide();
-    });
-}
-
-function cef_loadlevels(leveldata) {
-    LevelProgress.loadData(leveldata)
-}
-
-function cef_showlevels() {
-    $("#progress").show();
-    $("#progress").animate({
-        opacity: 0.9
-    }, 100, function() {});
-}
-
-function cef_hidelevels() {
-    $("#progress").animate({
-        opacity: 0
-    }, 300, function() {
-        $("#progress").hide();
-    });
-}
-
-function notify(n) {
-    Notifications.notify(n)
+function cef_notification(n) {
+    iziToast.show(n);
 }
 
 function cef_loadlogin(name) {
+    console.log("cef_loadlogin", name)
     $("#join_username").val(name)
     $("#loading").animate({
         opacity: 0
@@ -303,6 +233,10 @@ function cef_loadlogin(name) {
     });
 }
 
+function cef_loadlobby() {
+    $("#lobbies").show();
+}
+
 function cef_hidelogin() {
     $("#login").removeClass("show");
     $("#login").animate({
@@ -310,45 +244,6 @@ function cef_hidelogin() {
         height: "0px"
     }, 300, function() {
         $("#login").hide();
-    });
-}
-
-function cef_loadteams(teams) {
-    Teams.loadTeams(teams);
-}
-
-function cef_showteam() {
-    $("#team").show();
-    Teams.init();
-    $("#team").animate({
-        opacity: 0.9
-    }, 100, function() {});
-}
-
-function cef_hideteam() {
-    $("#team").animate({
-        opacity: 0
-    }, 300, function() {
-        $("#team").hide();
-    });
-}
-
-function cef_loadweapons(weapons) {
-    WeaponShop.loadWeapons(weapons)
-}
-
-function cef_showweaponshop() {
-    $("#shop").show();
-    $("#shop").animate({
-        opacity: 0.9
-    }, 300, function() {});
-}
-
-function cef_hideweaponshop() {
-    $("#shop").animate({
-        opacity: 0
-    }, 300, function() {
-        $("#shop").hide();
     });
 }
 
