@@ -87,3 +87,7 @@ mp.Vector3.prototype.insidePolygon = function(polygon) {
 mp.vector = function(vec) {
     return new mp.Vector3(vec.x, vec.y, vec.z);
 }
+
+mp.isValid = function(val) {
+    return val != null && val != undefined && val != "";
+}
