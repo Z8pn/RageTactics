@@ -1,5 +1,9 @@
 let enum_count = 1;
 var enums = {
+    LOBBY_CREATING:enum_count++,
+    LOBBY_WAITING:enum_count++,
+    LOBBY_READY:enum_count++,
+    LOBBY_STARTING:enum_count++,
 	LOGIN_OK:enum_count++,
 	LOGIN_FAILED:enum_count++,
 	LOGIN_PASSWORD_WRONG:enum_count++,
@@ -11,9 +15,12 @@ var enums = {
     KILLED:enum_count++,
     KILL:enum_count++,
     LOBBY_JOIN_SUCCESS:enum_count++,
+    LOBBY_NOT_EXISTS:enum_count++,
     LOBBY_JOIN_FAIL_FULL:enum_count++,
     LOBBY_JOIN_FAIL_TEAM_INVALID:enum_count++,
+    LOBBY_JOIN_FAIL_TEAM_INVALID:enum_count++,
     LOBBY_PLAYER_NOT_FOUND:enum_count++,
+    LOBBY_MAP_NOT_FOUND:enum_count++,
 }
 Object.keys(enums).forEach(function(key, value) {
 	global[key] = enums[key];

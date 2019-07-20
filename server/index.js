@@ -1,6 +1,6 @@
 var PlayerClass = require("./users/player.js")
-var Gangwar = require("./users/gangwar.js")
-var Weapons = require("./users/weapons.js")
+//var Gangwar = require("./users/gangwar.js")
+//var Weapons = require("./users/weapons.js")
 var Lobby = require("./users/lobby.js")
 var getDeathReason = require("./libs/death_reasons.js")
 
@@ -32,15 +32,34 @@ mp.events.add("playerQuit", function(player, exitType, reason) {
     }
 });
 mp.events.add("ServerAccount:Login", function(player, username, password) {
+    console.log(players[player.id]);
     if (players[player.id]) {
         players[player.id].login(username, password)
     }
 });
 mp.events.add("ServerAccount:Register", function(player, username, password) {
+    console.log(players[player.id]);
     if (players[player.id]) {
         players[player.id].register(username, password)
     }
 });
+
+
+
+mp.events.add("ServerAccount:Register", function(player, username, password) {
+    console.log(players[player.id]);
+    if (players[player.id]) {
+        players[player.id].register(username, password)
+    }
+});
+
+
+
+
+
+
+
+
 
 var fs = require("fs");
 var saveFile = "savedpos.txt";
