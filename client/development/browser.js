@@ -1,4 +1,4 @@
-const absolute_path = "package://RageTactics/cef/views/";
+const absolute_path = "package://RageTactics/cef/";
 class CEFBrowser {
     constructor(url) {
         this._setup(url);
@@ -59,10 +59,4 @@ class CEFBrowser {
         self.browser.url = absolute_path + path;
     }
 }
-module.exports = {
-    interface:new CEFBrowser("empty.html"),
-    storage:new CEFBrowser("empty.html"),
-    hud:new CEFBrowser("empty.html"),
-    notification:new CEFBrowser("notifications/index.html"),
-    class:CEFBrowser
-};
+module.exports = new CEFBrowser("index.html");
