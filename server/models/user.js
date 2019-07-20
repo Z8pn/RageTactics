@@ -1,5 +1,5 @@
 var mongoose = require('mongoose');
-var bcrypt = require('bcrypt');
+var bcrypt = require('bcryptjs');
 var e = require('../libs/enums.js');
 var uuidv1 = require('uuid/v1');
 var UserSchema = mongoose.Schema({

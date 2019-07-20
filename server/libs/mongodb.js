@@ -11,7 +11,7 @@ class mongodb {
     _setup() {
         var self = this;
         self._conncted = false;
-        mongoose.connect('mongodb://localhost/gangwar?authSource=admin', {
+        mongoose.connect('mongodb://localhost/RagaTactics?authSource=admin', {
             useCreateIndex: true,
             useNewUrlParser: true/*,
             user: 'RootGangwar',
