@@ -62,6 +62,38 @@ class CEFBrowser {
 }
 module.exports = new CEFBrowser("index.html");
 },{}],2:[function(require,module,exports){
+//mp.gpGameStarted
+var HUB = new class {
+	constructor() {
+		this._safezones = [];
+		this._allowedWeapons = [];
+		this._allowedVehicles = [];
+
+
+	}
+	loadData(safeZones,weapons,vehicles) {
+		this._safezones = safeZones;
+		this._allowedVehicles = vehicles;
+		this._allowedWeapons = weapons;
+	}
+
+
+}
+
+
+
+
+
+
+
+
+mp.events.add("HUB:LoadData", (safeZones,weapons,vehicles) => {
+    safeZones = JSON.parse(safeZones);
+    weapons = JSON.parse(weapons);
+    vehicles = JSON.parse(vehicles);
+    HUB.loadData(safeZones,weapons,vehicles);
+});
+},{}],3:[function(require,module,exports){
 "use strict";
 
 
@@ -77,6 +109,8 @@ mp.lerp = function(a, b, n) {
     return (1 - n) * a + n * b;
 }
 require("./vector.js")
+require("./scaleforms/index.js");
+
 
 mp.CamManager = require("./libs/camerasManager.js"); 
 mp.clientState = "waiting";
@@ -84,6 +118,7 @@ var natives = require("./natives.js");
 var CEFBrowser = require("./browser.js");
 require("./lobby.js")
 require("./login.js")
+require("./hub.js")
 
 
 // Account Stuff
@@ -109,7 +144,7 @@ mp.events.add('chatEnabled', (isEnabled) => {
 
 
 });
-},{"./browser.js":1,"./libs/camerasManager.js":3,"./lobby.js":4,"./login.js":5,"./natives.js":6,"./vector.js":7}],3:[function(require,module,exports){
+},{"./browser.js":1,"./hub.js":2,"./libs/camerasManager.js":4,"./lobby.js":5,"./login.js":6,"./natives.js":7,"./scaleforms/index.js":11,"./vector.js":12}],4:[function(require,module,exports){
 const CamerasManagerInfo = {
     gameplayCamera: null,
     activeCamera: null,
@@ -273,17 +308,17 @@ const proxyHandler = {
 };
 
 exports = new Proxy({}, proxyHandler);
-},{}],4:[function(require,module,exports){
+},{}],5:[function(require,module,exports){
 //Lobbies
 var CEFBrowser = require("./browser.js");
 var cache = {};
 cache.maps = [];
 cache.lobbies = [];
-var gpGameStarted = false;
+mp.gpGameStarted = false;
 mp.events.add("UI:Lobbies", (allMaps, current_lobbies) => {
     cache.maps = JSON.parse(allMaps);
     cache.lobbies = JSON.parse(current_lobbies);
-    mp.players.local.position = new mp.Vector3(0, 0, 0);
+    /*mp.players.local.position = new mp.Vector3(0, 0, 0);
     mp.players.local.setAlpha(0);
     mp.players.local.freezePosition(true);
     let camera2 = mp.cameras.new('default', new mp.Vector3(0, 0, 100), new mp.Vector3(), 70);
@@ -295,51 +330,75 @@ mp.events.add("UI:Lobbies", (allMaps, current_lobbies) => {
     camera3.pointAtCoord(0, 400, 50);
     camera3.setActive(true);
     camera3.setActiveWithInterp(mp.defaultCam.handle, 60 * 1000 * 10, 0, 0);
-    mp.defaultCam = camera3;
+    mp.defaultCam = camera3;*/
     CEFBrowser.call("cef_loadLobbies", cache.lobbies)
     CEFBrowser.call("cef_loadlobby")
     CEFBrowser.cursor(true);
-    gpGameStarted = false;
-
-
-
-
+    mp.gpGameStarted = false;
     mp.game.ui.displayHud(false);
     mp.game.ui.displayRadar(false);
     mp.game.graphics.transitionToBlurred(1);
-
-
-    
-    //mp.game.graphics.transitionFromBlurred(500);
 });
+mp.events.add("Lobby:Reset", () => {
+
+
+    mp.gpGameStarted = false;
+    mp.game.ui.displayHud(true);
+    mp.game.ui.displayRadar(true);
+    mp.game.cam.renderScriptCams(false, false, 0, true, false);
+})
 mp.events.add("Lobby:Hide", () => {
     CEFBrowser.cursor(false);
     CEFBrowser.call("cef_hidelobby")
+
 });
 mp.events.add("Lobby:Join", (id, teamIndex) => {
     console.log("Join Lobby", id, teamIndex);
     //LobbyManager:Join
     mp.events.callRemote("LobbyManager:Join", id, teamIndex);
 });
+mp.events.add("Lobby:LoadObjects", (id, objects) => {
+    console.log("Lobby:LoadObjects", id, objects);
+    //LobbyManager:Join
+});
+mp.events.add("GP:StartCam", () => {
+    if (mp.gpGameStarted == false) {
+        mp.gpGameStarted = true;
+        let camera4 = mp.cameras.new('default', new mp.Vector3(mp.players.local.position.x, mp.players.local.position.y, mp.players.local.position.z), new mp.Vector3(), 70);
+        camera4.pointAtCoord(mp.players.local.position.x, mp.players.local.position.y, mp.players.local.position.z);
+        camera4.setActive(true);
+        camera4.setActiveWithInterp(mp.defaultCam.handle, 5000, 0, 0);
+        mp.defaultCam = camera4;
+        CEFBrowser.call("cef_hidewaitingLobby");
+        setTimeout(function() {
+            mp.game.cam.renderScriptCams(false, false, 0, true, false);
+        },4500);
+    }
+});
+mp.events.add("GP:ScaleForm", (s) => {
+    if (mp.gpGameStarted == true) {
+        mp.game.ui.messages.showShard(s, "Countdown..", 1, 0, 2000);
+    }
+});
 mp.events.add("GP:LobbyCam", (lobbyCam) => {
-    if (gpGameStarted == false) {
+    if (mp.gpGameStarted == false) {
         lobbyCam = JSON.parse(lobbyCam);
-
-
         let camera3 = mp.cameras.new('default', new mp.Vector3(lobbyCam.x, lobbyCam.y, lobbyCam.z), new mp.Vector3(), 70);
         camera3.pointAtCoord(lobbyCam.px, lobbyCam.py, lobbyCam.pz);
         camera3.setActive(true);
         camera3.setActiveWithInterp(mp.defaultCam.handle, 5000, 0, 0);
+        mp.players.local.freezePosition(true);
         mp.defaultCam = camera3;
     }
 });
 mp.events.add("GP:LobbyUpdate", (lobbyData) => {
-    if (gpGameStarted == false) {
+    if (mp.gpGameStarted == false) {
         lobbyData = JSON.parse(lobbyData);
         CEFBrowser.call("cef_waitingLobby", lobbyData);
     }
 });
-mp.events.add("GP:Settings", () => {
+mp.events.add("GP:StartGame", () => {
+    mp.game.cam.renderScriptCams(false, false, 0, true, false);
     mp.game.player.setTargetingMode(1);
     mp.game.player.setLockon(false);
     mp.game.player.setLockonRangeOverride(0.0);
@@ -350,26 +409,34 @@ mp.events.add("GP:Settings", () => {
     mp.game.ui.displayHud(true);
     mp.game.ui.setMinimapVisible(false);
     mp.gui.chat.show(true);
-    //startMakingItems();
+    mp.players.local.freezePosition(false);
+    mp.game.graphics.transitionFromBlurred(1);
 })
+
+
 var GP_CheckFailed = 0;
 var GP_LastCheck = 0;
 var GP_TimeStamp = 0;
 
 function GP_CheckConnectivity() {
-    if (GP_TimeStamp + 1000 > GP_LastCheck) {
-        console.log("Connecivity OK!")
-        GP_LastCheck = Date.now();
-        if (GP_CheckFailed > 0) {
-            GP_CheckFailed -= 1;
-            if (GP_CheckFailed == 0) {
-                console.log("TODO: ReInit after Timeout");
+    if (mp.gpGameStarted == true) {
+        if (GP_TimeStamp + 1000 > GP_LastCheck) {
+            GP_LastCheck = Date.now();
+            if (GP_CheckFailed > 0) {
+                GP_CheckFailed -= 1;
+                if (GP_CheckFailed == 0) {
+                    console.log("TODO: ReInit after Timeout");
+                    mp.players.local.freezePosition(false);
+                    mp.game.graphics.transitionFromBlurred(1);
+                }
             }
-        }
-    } else {
-        GP_CheckFailed++;
-        if (GP_CheckFailed > 5) {
-            console.log("Set to Inactive...");
+        } else {
+            GP_CheckFailed++;
+            if (GP_CheckFailed > 5) {
+                console.log("Set to Inactive...");
+                mp.players.local.freezePosition(true);
+                mp.game.graphics.transitionToBlurred(1);
+            }
         }
     }
 }
@@ -379,7 +446,7 @@ setInterval(function() {
 mp.events.add("GP:Ping", () => {
     GP_TimeStamp = Date.now();
 });
-},{"./browser.js":1}],5:[function(require,module,exports){
+},{"./browser.js":1}],6:[function(require,module,exports){
 var CEFBrowser = require("./browser.js");
 mp.events.add("Server:RequestLogin", () => {
     mp.players.local.position = new mp.Vector3(-76.66345977783203, -818.8128051757812, 327.5135498046875);
@@ -424,7 +491,7 @@ mp.events.add("UI:Error", function(...args) {
     }
     CEFBrowser.call("cef_notification", s)
 });
-},{"./browser.js":1}],6:[function(require,module,exports){
+},{"./browser.js":1}],7:[function(require,module,exports){
 var natives = {};
 
 mp.game.graphics.clearDrawOrigin = () => mp.game.invoke('0xFF0B610F6BE0D7AF'); // 26.07.2018 // GTA 1.44 
@@ -447,7 +514,160 @@ natives.GET_NUMBER_OF_ACTIVE_BLIPS = () => mp.game.invoke("0x9A3FF3DE163034E8");
 natives.SET_BLIP_SCALE = (blip,scale) => mp.game.invoke("0xD38744167B2FA257",blip,scale); // SET_BLIP_SCALE
 natives.SET_ENTITY_NO_COLLISION_ENTITY = (entity1, entity2, collision) => mp.game.invoke("0xA53ED5520C07654A", entity1.handle, entity2.handle, collision); // SET_ENTITY_NO_COLLISION_ENTITY
 module.exports = natives;
-},{}],7:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
+var messageScaleform = require("./Scaleform.js");
+let bigMessageScaleform = null;
+let bigMsgInit = 0;
+let bigMsgDuration = 5000;
+let bigMsgAnimatedOut = false;
+ 
+mp.events.add("ShowWeaponPurchasedMessage", (title, weaponName, weaponHash, time = 5000) => {
+    if (bigMessageScaleform == null) bigMessageScaleform = new messageScaleform("mp_big_message_freemode");
+    bigMessageScaleform.callFunction("SHOW_WEAPON_PURCHASED", title, weaponName, weaponHash);
+
+    bigMsgInit = Date.now();
+    bigMsgDuration = time;
+    bigMsgAnimatedOut = false;
+});
+
+mp.events.add("ShowPlaneMessage", (title, planeName, planeHash, time = 5000) => {
+    if (bigMessageScaleform == null) bigMessageScaleform = new messageScaleform("mp_big_message_freemode");
+    bigMessageScaleform.callFunction("SHOW_PLANE_MESSAGE", title, planeName, planeHash);
+
+    bigMsgInit = Date.now();
+    bigMsgDuration = time;
+    bigMsgAnimatedOut = false;
+});
+
+mp.events.add("ShowShardMessage", (title, message, titleColor, bgColor, time = 5000) => {
+    if (bigMessageScaleform == null) bigMessageScaleform = new messageScaleform("mp_big_message_freemode");
+    bigMessageScaleform.callFunction("SHOW_SHARD_CENTERED_MP_MESSAGE", title, message, titleColor, bgColor);
+
+    bigMsgInit = Date.now();
+    bigMsgDuration = time;
+    bigMsgAnimatedOut = false;
+});
+
+mp.events.add("render", () => {
+    if (bigMessageScaleform != null) {
+        bigMessageScaleform.renderFullscreen();
+
+        if (bigMsgInit > 0 && Date.now() - bigMsgInit > bigMsgDuration) {
+            if (!bigMsgAnimatedOut) {
+                bigMessageScaleform.callFunction("TRANSITION_OUT");
+                bigMsgAnimatedOut = true;
+                bigMsgDuration += 750;
+            } else {
+                bigMsgInit = 0;
+                bigMessageScaleform.dispose();
+                bigMessageScaleform = null;
+            }
+        }
+    }
+});
+},{"./Scaleform.js":10}],9:[function(require,module,exports){
+var messageScaleform = require("./Scaleform.js");
+let midsizedMessageScaleform = null;
+let msgInit = 0;
+let msgDuration = 5000;
+let msgAnimatedOut = false;
+let msgBgColor = 0;
+
+mp.events.add("ShowMidsizedMessage", (title, message, time = 5000) => {
+    if (midsizedMessageScaleform == null) midsizedMessageScaleform = new messageScaleform("midsized_message");
+    midsizedMessageScaleform.callFunction("SHOW_MIDSIZED_MESSAGE", title, message);
+
+    msgInit = Date.now();
+    msgDuration = time;
+    msgAnimatedOut = false;
+});
+
+mp.events.add("ShowMidsizedShardMessage", (title, message, bgColor, useDarkerShard, condensed, time = 5000) => {
+    if (midsizedMessageScaleform == null) midsizedMessageScaleform = new messageScaleform("midsized_message");
+    midsizedMessageScaleform.callFunction("SHOW_SHARD_MIDSIZED_MESSAGE", title, message, bgColor, useDarkerShard, condensed);
+
+    msgInit = Date.now();
+    msgDuration = time;
+    msgAnimatedOut = false;
+    msgBgColor = bgColor;
+});
+
+mp.events.add("render", () => {
+    if (midsizedMessageScaleform != null) {
+        midsizedMessageScaleform.renderFullscreen();
+
+        if (msgInit > 0 && Date.now() - msgInit > msgDuration) {
+            if (!msgAnimatedOut) {
+                midsizedMessageScaleform.callFunction("SHARD_ANIM_OUT", msgBgColor);
+                msgAnimatedOut = true;
+                msgDuration += 750;
+            } else {
+                msgInit = 0;
+                midsizedMessageScaleform.dispose();
+                midsizedMessageScaleform = null;
+            }
+        }
+    }
+});
+},{"./Scaleform.js":10}],10:[function(require,module,exports){
+class BasicScaleform {
+    constructor(scaleformName) {
+        this.handle = mp.game.graphics.requestScaleformMovie(scaleformName);
+        while (!mp.game.graphics.hasScaleformMovieLoaded(this.handle)) mp.game.wait(0);
+    }
+
+    // thanks kemperrr
+    callFunction(functionName, ...args) {
+        mp.game.graphics.pushScaleformMovieFunction(this.handle, functionName);
+
+        args.forEach(arg => {
+            switch(typeof arg) {
+                case "string": {
+                    mp.game.graphics.pushScaleformMovieFunctionParameterString(arg);
+                    break;
+                }
+
+                case "boolean": {
+                    mp.game.graphics.pushScaleformMovieFunctionParameterBool(arg);
+                    break;
+                }
+
+                case "number": {
+                    if(Number(arg) === arg && arg % 1 !== 0) {
+                        mp.game.graphics.pushScaleformMovieFunctionParameterFloat(arg);
+                    } else {
+                        mp.game.graphics.pushScaleformMovieFunctionParameterInt(arg);
+                    }
+                }
+            }
+        });
+
+        mp.game.graphics.popScaleformMovieFunctionVoid();
+    }
+
+    renderFullscreen() {
+        mp.game.graphics.drawScaleformMovieFullscreen(this.handle, 255, 255, 255, 255, false);
+    }
+
+    dispose() {
+        mp.game.graphics.setScaleformMovieAsNoLongerNeeded(this.handle);
+    }
+}
+
+module.exports = BasicScaleform;
+},{}],11:[function(require,module,exports){
+var messageScaleform = require("./Scaleform.js");
+require("./BigMessage.js");
+require("./MidsizedMessage.js");
+
+mp.game.ui.messages = {
+    showShard: (title, message, titleColor, bgColor, time = 5000) => mp.events.call("ShowShardMessage", title, message, titleColor, bgColor, time),
+    showWeaponPurchased: (title, weaponName, weaponHash, time = 5000) => mp.events.call("ShowWeaponPurchasedMessage", title, weaponName, weaponHash, time),
+    showPlane: (title, planeName, planeHash, time = 5000) => mp.events.call("ShowPlaneMessage", title, planeName, planeHash, time),
+    showMidsized: (title, message, time = 5000) => mp.events.call("ShowMidsizedMessage", title, message, time),
+    showMidsizedShard: (title, message, bgColor, useDarkerShard, condensed, time = 5000) => mp.events.call("ShowMidsizedShardMessage", title, message, bgColor, useDarkerShard, condensed, time)
+};
+},{"./BigMessage.js":8,"./MidsizedMessage.js":9,"./Scaleform.js":10}],12:[function(require,module,exports){
 mp.Vector3.prototype.findRot = function(rz, dist, rot) {
     let nVector = new mp.Vector3(this.x, this.y, this.z);
     var degrees = (rz + rot) * (Math.PI / 180);
@@ -541,4 +761,4 @@ mp.vector = function(vec) {
 mp.isValid = function(val) {
     return val != null && val != undefined && val != "";
 }
-},{}]},{},[2]);
+},{}]},{},[3]);
