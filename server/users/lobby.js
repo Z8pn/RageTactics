@@ -1,8 +1,9 @@
 var MapManager = require("../world/MapManager.js")
 var e = require('../libs/enums.js');
-var IDManager = new class {
+var NumberManager = new class {
     constructor() {
         this._usedIds = [];
+        this._useddims = [];
     }
     new_id(length) {
         var result, i, j;
@@ -22,6 +23,21 @@ var IDManager = new class {
         this._usedIds[id] = true;
         return id;
     }
+    new_dim() {
+        return (Math.floor(Math.random() * (10000 - 1)) + 1) * -1;
+    }
+    gen_dim() {
+        let self = this;
+        let dim = self.new_dim();
+        while (self._useddims[dim]) {
+            dim = self.new_dim();
+        }
+        this._useddims[dim] = true;
+        return dim;
+    }
+    clear_dim(dim) {
+        this._useddims[dim] = true;
+    }
 }
 var Lobby = class {
     constructor() {
@@ -33,9 +49,12 @@ var Lobby = class {
         self._weapons = [];
         self._max_players = 0;
         self._players = [];
+        self._players_ready = [];
+        self._playersDead = [];
         self._teams = [];
+        self._dim = NumberManager.gen_dim();
         self._status = e.LOBBY_CREATING;
-        self._id = IDManager.gen_id(5);
+        self._id = NumberManager.gen_id(5);
         self._objects = [];
         self._spawnpoints = [];
         self._rounds = 1;
@@ -47,9 +66,30 @@ var Lobby = class {
             py: 0,
             pz: 0
         };
+        self._lobbyWaitCooldown = 5;
         self._tick = setInterval(function() {
             self.tick();
         }, 1000)
+    }
+    get objects() {
+        return this._objects;
+    }
+    set objects(arr_objects) {
+        this._objects = arr_objects;
+    }
+    get weapons() {
+        return this._weapons;
+    }
+    set weapons(arr_weapons) {
+        this._weapons = arr_weapons;
+    }
+    reset() {
+        this._lobbyWaitCooldown = 30;
+        this.status = e.LOBBY_CREATING;
+
+        this.players.forEach(function(player) {
+            LobbyManager.leaveLobby(player.client);
+        })
     }
     set status(s) {
         this._status = s;
@@ -57,21 +97,87 @@ var Lobby = class {
     get status() {
         return this._status;
     }
+    get image() {
+        return this._image;
+    }
+    get rounds() {
+        return this._rounds;
+    }
+    set rounds(rs) {
+        this._rounds = rs;
+    }
+    get name() {
+        return this._name;
+    }
+    set name(ename) {
+        this._name = ename;
+    }
+    get id() {
+        return this._id;
+    }
+    set map(mapName) {
+        let map = MapManager.getMapData(mapName);
+        console.log("set map", map)
+        if (map) {
+            this._map = map.name;
+            this._image = map.image;
+            this._maxPlayers = map.max_players;
+            this.objects = map.objects;
+            this._spawnpoints = map.spawns;
+            this._teams = map.teams;
+            this._previewCam = map.previewCam;
+            this.weapons = map.weapons;
+            console.log("set lobby to " + mapName);
+        } else {
+            return e.LOBBY_MAP_NOT_FOUND
+        }
+    }
+    get map() {
+        return this._map;
+    }
+    get players() {
+        return this._players;
+    }
+    get player_count() {
+        return this._players.length;
+    }
+    get max_players() {
+        return this._maxPlayers;
+    }
+    get teams() {
+        let temp_teams = this._teams.map(e => {
+            let t = e;
+            t.players = 0;
+            return t;
+        });
+        this.players.forEach(function(player) {
+            temp_teams[player.team].players += 1;
+        });
+        return temp_teams;
+    }
     update_status() {
         let self = this;
-         if ((self.player_count == 0) && (self.status == "running")) {
-             if (!self._idleTick) self._idleTick = 0;
-             self._idleTick += 1;
-             if (self._idleTick > 120) LobbyManager.clear(self.id);
-         }
+        if ((self.player_count == 0) && (self.status == e.LOBBY_RUNNING)) {
+            if (!self._idleTick) self._idleTick = 0;
+            self._idleTick += 1;
+            if (self._idleTick > 120) LobbyManager.clear(self.id);
+        }
         if (self.players.length > 0) {
-            self.status = e.LOBBY_WAITING;
+            if (self.status == e.LOBBY_CREATING) {
+                console.log("LOBBY WAITING");
+                self.status = e.LOBBY_WAITING;
+            } else if (self.status == e.LOBBY_WAITING) {
+                self._lobbyWaitCooldown -= 1;
+                if (self._lobbyWaitCooldown < 1) {
+                    console.log("LOBBY_STARTING");
+                    self.status = e.LOBBY_STARTING;
+                }
+            }
         }
     }
     tick() {
         let self = this;
         self.update_status();
-
         let tPlayerNames = [];
         if (self.status == e.LOBBY_WAITING) {
             self._teams.forEach(function(e, i) {
@@ -105,64 +211,89 @@ var Lobby = class {
                     player.client.call("GP:LobbyUpdate", [JSON.stringify(tPlayerNames)]);
                 }
             })
+            if (self.status == e.LOBBY_STARTING) {
+                self.start();
+                console.log("start()");
+            }
+            if (self.status == e.LOBBY_COUNTDOWN) {
+                self.players.forEach(function(player) {
+                    player.client.call("GP:ScaleForm", ["Starting..."]);
+                });
+                self.status = e.LOBBY_COUNTDOWN_5;
+            } else if (self.status == e.LOBBY_COUNTDOWN_5) {
+                self.players.forEach(function(player) {
+                    player.client.call("GP:ScaleForm", ["5"]);
+                });
+                self.status = e.LOBBY_COUNTDOWN_4;
+            } else if (self.status == e.LOBBY_COUNTDOWN_4) {
+                self.players.forEach(function(player) {
+                    player.client.call("GP:ScaleForm", ["4"]);
+                });
+                self.status = e.LOBBY_COUNTDOWN_3;
+            } else if (self.status == e.LOBBY_COUNTDOWN_3) {
+                self.players.forEach(function(player) {
+                    player.client.call("GP:ScaleForm", ["3"]);
+                });
+                self.status = e.LOBBY_COUNTDOWN_2;
+            } else if (self.status == e.LOBBY_COUNTDOWN_2) {
+                self.players.forEach(function(player) {
+                    player.client.call("GP:ScaleForm", ["2"]);
+                });
+                self.status = e.LOBBY_COUNTDOWN_1;
+            } else if (self.status == e.LOBBY_COUNTDOWN_1) {
+                self.players.forEach(function(player) {
+                    player.client.call("GP:ScaleForm", ["1"]);
+                });
+                self.status = e.LOBBY_COUNTDOWN_GO;
+            } else if (self.status == e.LOBBY_COUNTDOWN_GO) {
+                self.status = e.LOBBY_RUNNING;
+                self.players.forEach(function(player) {
+                    player.client.call("GP:StartGame");
+                });
+            }
         }
     }
-    get image() {
-        return this._image;
-    }
-    get rounds() {
-        return this._rounds;
-    }
-    set rounds(rs) {
-        this._rounds = rs;
-    }
-    get name() {
-        return this._name;
-    }
-    set name(ename) {
-        this._name = ename;
-    }
-    get id() {
-        return this._id;
-    }
-    set map(mapName) {
-        let map = MapManager.getMapData(mapName);
-        console.log("set map", map)
-        if (map) {
-            this._map = map.name;
-            this._image = map.image;
-            this._maxPlayers = map.max_players;
-            this._objects = map.objects;
-            this._spawnpoints = map.spawns;
-            this._teams = map.teams;
-            this._previewCam = map.previewCam;
-            console.log("set lobby to " + mapName);
-        } else {
-            return e.LOBBY_MAP_NOT_FOUND
+    loaded(player) {
+        if (this._players_ready.indexOf(player) == -1) {
+            this._players_ready.push(player);
         }
     }
-    get map() {
-        return this._map;
-    }
-    get players() {
-        return this._players;
-    }
-    get player_count() {
-        return this._players.length;
-    }
-    get max_players() {
-        return this._maxPlayers;
-    }
-    get teams() {
-        let temp_teams = this._teams.map(e => {
-            let t = e;
-            t.players = 0;
-            return t;
-        });
-        this.players.forEach(function(player) {
-            temp_teams[player.team].players += 1;
-        });
-        return temp_teams;
+    start() {
+        let self = this;
+        if (self.status == e.LOBBY_STARTING) {
+            self.status = e.LOBBY_PREPARING;
+            console.log("status" + e.LOBBY_PREPARING);
+            let spawns = JSON.parse(JSON.stringify(self._spawnpoints));
+            self._teams.forEach(function(e, i) {
+                let spawns = self._spawnpoints.filter(e => {
+                    return e.team = i;
+                })
+                let team = i;
+                let clothing = e.clothing;
+                self.players.forEach(function(e) {
+                    if (e.team == team) {
+                        let spawn_pos = spawns.pop();
+                        console.log("spawn player at", spawn_pos.x, spawn_pos.y, spawn_pos.z, spawn_pos.heading, clothing, self._dim);
+                        e.client.class.spawn(spawn_pos.x, spawn_pos.y, spawn_pos.z, spawn_pos.heading, clothing);
+                        //e.client.class.setEquipment(self.weapons);
+                        e.client.call("GP:StartCam");
+                        e.client.call("Lobby:LoadObjects", [self.id, JSON.stringify(self.objects)]);
+                    }
+                });
+            });
+            self._tempTries = 100;
+            self._cLoaded = setInterval(function() {
+                if (self._players_ready.length == self._players.length) {
+                    clearInterval(self._cLoaded);
+                    self.status = e.LOBBY_COUNTDOWN;
+                }
+                self._tempTries -= 1;
+                if (self._tempTries < 1) {
+                    clearInterval(self._cLoaded);
+                    self.reset();
+                }
+            }, 5000);
+        }
     }
     getPlayer(player) {
         let p = this._players.find(e => {
@@ -242,8 +373,14 @@ var LobbyManager = new class {
         console.log("TODO getLobbyPlayerIsIn(lobby.js)")
         return;
     }
+    getLobbyById(player) {
+        console.log("TODO getLobbyPlayerIsIn(lobby.js)")
+        return;
+    }
     createLobby(map) {}
     deleteLobby(id) {}
+    leaveLobby(player) {
+    }
     joinLobby(player, id, teamIndex) {
         if (player.class) {
             console.log("joinLobby");
@@ -331,6 +468,16 @@ var LobbyManager = new class {
 }
 
 */
+mp.events.add("LobbyManager:LoadingFinished", function(player, lID) {
+    if (player.class) {
+        console.log("LobbyManager:LoadingFinished");
+        let lobby = LobbyManager.getLobbyByID(lID);
+        let pLobby = LobbyManager.getLobbyPlayerIsIn(player);
+        if (lobby == pLobby) {
+            pLobby.loaded(player);
+        }
+    }
+});
 mp.events.add("LobbyManager:Join", function(player, id, teamIndex) {
     if (player.class) {
         if (player.class.getState == "lobby") {
