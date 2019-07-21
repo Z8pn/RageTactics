@@ -23,6 +23,12 @@ var Player = class {
         self._armor = 100;
         self.weapons = [];
     }
+    log(...args) {
+        console.log("Account:Log", args)
+    }
+    error(...args) {
+        console.error("Account:Error", args)
+    }
     set armor(a) {
         this._armor = a;
         this._player.armour = this._armor;
@@ -43,12 +49,15 @@ var Player = class {
     updateState(state) {
         this._State = state;
     }
-    log(...args) {
-        console.log("Account:Log", args)
+
+    hit(target,weapon,bodypart) {
+
+        console.log("Target",target);
+        console.log("weapon",weapon);
+        console.log("bodypart",bodypart);
     }
-    error(...args) {
-        console.error("Account:Error", args)
-    }
+
+
     spawn(x, y, z, heading, clothing,dim) {
         let self = this;
         if (self.isSpawned == false) {
@@ -81,6 +90,11 @@ var Player = class {
     get loggedIn() {
         return this._loggedIn;
     }
+    set loggedIn(t) {
+        this._loggedIn = t;
+
+        this._player.setVariable("loggedIn", t);
+    }
     get isSpawned() {
         return this._spawned;
     }
@@ -109,6 +123,7 @@ var Player = class {
                     self._player.call("Account:HideLogin");
                     //self.sendLobbyData();
                     HUB.join(self._player);
+                    self.loggedIn = true;
                 } else {
                     console.log("Unefined Error");
                     self._player.call("UI:Error", ["Unefined Error"])
@@ -130,6 +145,7 @@ var Player = class {
                     //self.sendLobbyData();
                     HUB.join(self._player);
 
+                    self.loggedIn = true;
                 } else {
                     self._player.call("UI:Error", ["Unefined Error"])
                 }

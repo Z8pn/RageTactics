@@ -9,7 +9,11 @@ var MapManager = class {
 	get maps() {
 		let self = this;
 		let m = Object.keys(self._loadedMaps).map(e => {
-			return self._loadedMaps[e].name;
+			return {
+				name:self._loadedMaps[e].name,
+				name:self._loadedMaps[e].weapons,
+				name:self._loadedMaps[e].teams
+			};
 		});
 		console.log(m);
 		/*console.log("maps",Object.keys(self._loadedMaps).map(e => {
