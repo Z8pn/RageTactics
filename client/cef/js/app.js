@@ -161,7 +161,7 @@ var LobbyManager = new class {
     }
     select_team(id, team_index) {
         this._selectedTeam = team_index;
-        console.log("this._selectedTeam",this._selectedTeam);
+        console.log("this._selectedTeam", this._selectedTeam);
         if (this._selectedTeam > -1) {
             $("#modal_lobby").find(".teams > .list > div").each(function(i, e) {
                 $(e).removeClass("selected");
@@ -204,9 +204,13 @@ function cef_hidelobby() {
     LobbyManager.hide();
 }
 
+function cef_hidewaitingLobby() {
+    $("#lobby_waiting").hide();
+}
+
 function cef_waitingLobby(teams) {
-    console.log("cef_waitingLobby",teams);
-    let xHtml =`<div class="info">Waiting for players...</div>`;
+    console.log("cef_waitingLobby", teams);
+    let xHtml = `<div class="info">Waiting for players...</div>`;
     teams.forEach(function(team) {
         xHtml += `<div class="team"><div class="name">${team.name}</div><div class="players">`
         team.players.forEach(function(player) {
