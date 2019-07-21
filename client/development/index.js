@@ -13,6 +13,8 @@ mp.lerp = function(a, b, n) {
     return (1 - n) * a + n * b;
 }
 require("./vector.js")
+require("./scaleforms/index.js");
+
 
 mp.CamManager = require("./libs/camerasManager.js"); 
 mp.clientState = "waiting";
@@ -20,6 +22,7 @@ var natives = require("./natives.js");
 var CEFBrowser = require("./browser.js");
 require("./lobby.js")
 require("./login.js")
+require("./hub.js")
 
 
 // Account Stuff
