@@ -17,18 +17,9 @@ mp.events.add("playerQuit", function(player, exitType, reason) {
     console.log("disconnect",exitType, reason)
     if (players[player.id]) {
         let player_id = player.id;
+         players[player_id] = null;
         console.log("Data Saving")
-        players[player_id].save().then(function() {
-            console.log("Data Saved")
-            players[player_id].logout();
-            players[player_id] = null;
-            delete players[player_id];
-        }).catch(function(err) {
-            console.log("Data Error", err)
-            players[player_id].logout();
-            players[player_id] = null;
-            delete players[player_id];
-        })
+        
     }
 });
 mp.events.add("ServerAccount:Login", function(player, username, password) {
@@ -43,16 +34,6 @@ mp.events.add("ServerAccount:Register", function(player, username, password) {
         players[player.id].register(username, password)
     }
 });
-
-
-
-mp.events.add("ServerAccount:Register", function(player, username, password) {
-    console.log(players[player.id]);
-    if (players[player.id]) {
-        players[player.id].register(username, password)
-    }
-});
-
 
 
 
