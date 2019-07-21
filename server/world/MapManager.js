@@ -16,20 +16,19 @@ var MapManager = class {
 			let e = self._loadedMaps[e];
 			return e.name;
 		}))*/
-
 		return m;
 	}
 	getMapData(name) {
 		let self = this;
-
 		let map = Object.keys(this._loadedMaps).findIndex(e => {
 			e = self._loadedMaps[e];
 			return e.name == name;
 		})
 		map = this._loadedMaps[Object.keys(this._loadedMaps)[map]];
 		if (map) {
+			console.log("map",map);
 			return {
-				name:map.name || "",
+				name: map.name || "",
 				image: map.image || "",
 				max_players: map.max_players || 10,
 				spawns: map.spawns || [],
@@ -54,25 +53,27 @@ var MapManager = class {
 		let self = this;
 		console.log("loadmap", fileName);
 		let temp_map = require("./maps/" + fileName);
-		console.log("temp_map",temp_map);
-		self._loadedMaps[fileName.replace(".js", "")] = {
-			name: temp_map.name,
-			objects: temp_map.objects,
-			spawns: temp_map.spawns,
-			teams: temp_map.teams,
-			name: temp_map.name,
-			image: temp_map.image,
-			previewCam: temp_map.previewCam,
-			max_players: temp_map.max_players
+		console.log("temp_map", temp_map);
+		if (temp_map.spawns.length >= temp_map.max_players) {
+			self._loadedMaps[fileName.replace(".js", "")] = {
+				name: temp_map.name,
+				objects: temp_map.objects,
+				spawns: temp_map.spawns,
+				teams: temp_map.teams,
+				name: temp_map.name,
+				image: temp_map.image,
+				previewCam: temp_map.previewCam,
+				max_players: temp_map.max_players
+			}
+			console.log("Loaded Map", temp_map.name)
 		}
-		console.log("Loaded Map", temp_map.name)
 	}
 	loadMaps() {
 		let self = this;
 		console.log("load dir");
 		fs.readdir("./packages/RageTactics/world/maps", function(err, files) {
-				console.log("err..",err);
-				console.log("files..",files);
+			console.log("err..", err);
+			console.log("files..", files);
 			files.forEach(function(map) {
 				console.log("loading..");
 				if (map.indexOf(".js") > -1) {
