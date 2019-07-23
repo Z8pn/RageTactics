@@ -19,4 +19,5 @@ natives.DOES_BLIP_EXIST = (blip) => mp.game.invoke("0xA6DB27D19ECBB7DA", blip); 
 natives.GET_NUMBER_OF_ACTIVE_BLIPS = () => mp.game.invoke("0x9A3FF3DE163034E8"); // GET_NUMBER_OF_ACTIVE_BLIPS
 natives.SET_BLIP_SCALE = (blip,scale) => mp.game.invoke("0xD38744167B2FA257",blip,scale); // SET_BLIP_SCALE
 natives.SET_ENTITY_NO_COLLISION_ENTITY = (entity1, entity2, collision) => mp.game.invoke("0xA53ED5520C07654A", entity1.handle, entity2.handle, collision); // SET_ENTITY_NO_COLLISION_ENTITY
+natives.SET_PED_TO_RAGDOLL = ( ped,  time1,  time2,  ragdollType,  p4,  p5,  p6) => mp.game.invoke("0xAE99FB955581844A", ped,  time1,  time2,  ragdollType,  p4,  p5,  p6); // SET_PED_TO_RAGDOLL
 module.exports = natives;
