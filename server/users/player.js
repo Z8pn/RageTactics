@@ -13,7 +13,9 @@ var Player = class {
     }
     _setup(player) {
         var self = this;
+        self._id = 0;
         self._player = player;
+        self._death = false;
         self._username = undefined;
         self._lobby = undefined;
         self._dbUser = undefined;
@@ -21,7 +23,9 @@ var Player = class {
         self._State = false;
         self._health = 100;
         self._armor = 100;
+        self._damage = [];
         self.weapons = [];
+        self._curLobby = -1;
     }
     log(...args) {
         console.log("Account:Log", args)
@@ -29,9 +33,31 @@ var Player = class {
     error(...args) {
         console.error("Account:Error", args)
     }
+    addDamage(attacker_id, weapon, damage, bodypart) {
+        console.log("addDamage", attacker_id, weapon, damage, bodypart);
+        this._damage.push({
+            attacker_id: attacker_id,
+            weapon: weapon,
+            damage: damage,
+            bodypart: bodypart
+        })
+    }
+    set lobby(id) {
+        this._curLobby = id;
+    }
+    get lobby() {
+        return this._curLobby;
+    }
+    get damage() {
+        return this._damage;
+    }
+    get id() {
+        return this._id;
+    }
     set armor(a) {
         this._armor = a;
         this._player.armour = this._armor;
+        this._player.call("AC:SetArmor", [this._armor]);
     }
     get armor() {
         return this._armor;
@@ -42,6 +68,7 @@ var Player = class {
     set health(h) {
         this._health = h;
         this._player.health = 100 + this._health;
+        this._player.call("AC:SetHealth", [this._health]);
     }
     get getState() {
         return this._State;
@@ -49,16 +76,81 @@ var Player = class {
     updateState(state) {
         this._State = state;
     }
-
-    hit(target,weapon,bodypart) {
-
-        console.log("Target",target);
-        console.log("weapon",weapon);
-        console.log("bodypart",bodypart);
+    syncHealth(nHP) {
+        this.health = nHP;
     }
-
-
-    spawn(x, y, z, heading, clothing,dim) {
+    syncArmor(nAr) {
+        this.armor = nAr;
+    }
+    isDead() {
+        return this._death;
+    }
+    death(attacker, weapon, bodypart) {
+        this._death = true;
+        this.health = 0;
+        this.armor = 0;
+        this._player.removeAllWeapons();
+        console.log("health", this.health);
+        console.log("armor", this.armor);
+        attacker.call("Combat:Kill");
+        this._player.setVariable("death", true);
+        let lobby = LobbyManager.getLobbyByID(this.lobby);
+        if (lobby) {
+            console.log("foudn lobby");
+            lobby.killed(this._player, attacker);
+            this._player.alpha = 0;
+        }
+    }
+    hit(attacker, weapon, bodypart) {
+        let self = this;
+        if (self.isDead() == 0) {
+            //console.log("attacker", attacker);
+            console.log("weapon", weapon);
+            console.log("bodypart", bodypart);
+            //calc dmg
+            let damage = 1;
+            damage = Damage.getWeaponDamage(weapon);
+            let mul = Damage.getBoneMul(bodypart);
+            damage *= mul;
+            let health = self.health;
+            let armor = self.armor - damage;
+            if (armor < 0) {
+                health += armor;
+                armor = 0;
+            }
+            self.armor = armor;
+            self.health = health;
+            if (self.health < 0) {
+                self.health = 0;
+            }
+            self._player.call("Combat:Hitted", [damage]);
+            attacker.call("Combat:Hit", [damage]);
+            self.addDamage(attacker.interface.id, weapon, damage, bodypart)
+            if ((self.health <= 0) && (self.isDead() == 0)) {
+                self.death(attacker, weapon, bodypart);
+            }
+        }
+    }
+    fireWeapon(weapon, ammo) {
+        let self = this;
+        let wIndex = self.weapons.findIndex(e => {
+            return e.weapon == weapon;
+        });
+        if (wIndex > -1) {
+            console.log("wIndex", wIndex);
+            console.log("weapon", weapon);
+            self.weapons[wIndex].ammo -= 1;
+            if (self.weapons[wIndex].ammo >= ammo) {
+                console.log("ammo", self.weapons[wIndex].ammo);
+                console.log("rammo", ammo);
+                self.weapons[wIndex].ammo = ammo;
+            }
+        } else {
+            console.log("cheat");
+            self._player.removeWeapon(weapon);
+        }
+    }
+    spawn(x, y, z, heading, clothing, dim) {
         let self = this;
         if (self.isSpawned == false) {
             self._player.spawn(new mp.Vector3(x, y, z));
@@ -66,12 +158,16 @@ var Player = class {
             //self._player.model = mp.joaat('mp_f_freemode_01');
             self._player.heading = heading || 0;
             self.health = 100;
-            self.armor = 100;
+            self.armor = 5;
             self.weapons = [];
+            self._player.alpha = 255;
+            self._damage = [];
+            self._death = false;
             /*
             self.isSpawned = true;
-            self._player.alpha = 255;
             */
+            self._player.setVariable("death", false);
+            self._player.setVariable("spawned", true);
             self._player.dimension = dim || 0;
             clothing.forEach(function(part) {
                 self._player.setClothes(part.componentNumber, part.drawable, part.texture, part.palette);
@@ -82,17 +178,23 @@ var Player = class {
         }
     }
     setEquipment(weapons) {
+        let self = this;
         console.log("TODO:SetWeapons");
-    }
-    get id() {
-        return this._userId
+        self.weapons = [];
+        weapons.forEach(function(weapon) {
+            console.log(weapon);
+            self._player.giveWeapon(weapon.hash, weapon.ammo);
+            self.weapons.push({
+                weapon: weapon.hash,
+                ammo: weapon.ammo
+            })
+        })
     }
     get loggedIn() {
         return this._loggedIn;
     }
     set loggedIn(t) {
         this._loggedIn = t;
-
         this._player.setVariable("loggedIn", t);
     }
     get isSpawned() {
@@ -105,12 +207,10 @@ var Player = class {
         var self = this;
         let allMaps = MapManager.maps;
         let current_lobbies = LobbyManager.lobbies;
-        console.log("allMaps", allMaps);
-        console.log("current_lobbies", current_lobbies);
         console.log("Lobby show");
         self._State = "lobby";
         self._player.setVariable("current_status", "lobby");
-        self._player.call("UI:Lobbies", [JSON.stringify(allMaps), JSON.stringify(current_lobbies)])
+        self._player.call("Lobby:Update", [JSON.stringify(allMaps), JSON.stringify(current_lobbies)])
     }
     register(username, password) {
         var self = this;
@@ -120,8 +220,9 @@ var Player = class {
                 if (result) {
                     console.log("registered");
                     self._dbUser = result;
+                    self._id = result.id;
                     self._player.call("Account:HideLogin");
-                    //self.sendLobbyData();
+                    self.sendLobbyData();
                     HUB.join(self._player);
                     self.loggedIn = true;
                 } else {
@@ -141,10 +242,10 @@ var Player = class {
             if (!err) {
                 if (result) {
                     self._dbUser = result;
+                    self._id = result.id;
                     self._player.call("Account:HideLogin");
-                    //self.sendLobbyData();
+                    self.sendLobbyData();
                     HUB.join(self._player);
-
                     self.loggedIn = true;
                 } else {
                     self._player.call("UI:Error", ["Unefined Error"])
@@ -155,4 +256,40 @@ var Player = class {
         })
     }
 }
+mp.events.add("Combat:FireWeapon", function(player, currentWeapon, remainingAmmo) {
+    if (player.interface) {
+        console.log("Combat:FireWeapon", currentWeapon, remainingAmmo);
+        player.interface.fireWeapon(currentWeapon, remainingAmmo);
+    }
+});
+mp.events.add("Combat:Hit", function(player, target, currentWeapon, hitBone) {
+    if ((target) && (currentWeapon)) {
+        if (target.type == "player") {
+            if ((player.interface) && (target.interface)) {
+                console.log("Combat:Hit", target.name, currentWeapon, hitBone);
+                target.interface.hit(player, currentWeapon, hitBone);
+            }
+        } else if (target.type == "vehicle") {
+            console.log("veh hit");
+        }
+    }
+});
+mp.events.add("User:RequestLobby", function(player) {
+    if (player.interface) {
+        console.log("sendLobbyData");
+        player.interface.sendLobbyData();
+    }
+});
+mp.events.add("User:ResyncHealth", function(player, hp) {
+    if (player.interface) {
+        console.log("User:ResyncHealth", hp);
+        player.interface.syncHealth(hp)
+    }
+});
+mp.events.add("User:ResyncArmor", function(player, a) {
+    if (player.interface) {
+        console.log("User:ResyncArmor", a);
+        player.interface.syncArmor(a)
+    }
+});
 module.exports = Player;
