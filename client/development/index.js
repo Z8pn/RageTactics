@@ -9,9 +9,6 @@ console.log = function(...a) {
     })
     mp.gui.chat.push("DeBuG:" + a.join(" "))
 };
-mp.lerp = function(a, b, n) {
-    return (1 - n) * a + n * b;
-}
 require("./vector.js")
 require("./scaleforms/index.js");
 
@@ -23,6 +20,8 @@ var CEFBrowser = require("./browser.js");
 require("./lobby.js")
 require("./login.js")
 require("./hub.js")
+require("./nametag.js")
+require("./combat.js")
 
 
 // Account Stuff
