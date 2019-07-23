@@ -42,6 +42,7 @@ var NumberManager = new class {
 var Lobby = class {
     constructor() {
         let self = this;
+        self._host = undefined;
         self._name = "";
         self._image = "";
         self._image = "";
@@ -50,14 +51,18 @@ var Lobby = class {
         self._max_players = 0;
         self._players = [];
         self._players_ready = [];
-        self._playersDead = [];
+        self._teamsDead = [];
         self._teams = [];
         self._dim = NumberManager.gen_dim();
         self._status = e.LOBBY_CREATING;
         self._id = NumberManager.gen_id(5);
         self._objects = [];
         self._spawnpoints = [];
-        self._rounds = 1;
+        self._round = 1;
+        self._MaxRounds = 1;
+        self._roundDuration = 5 * 60; // 5 Minutes;
+        self._orgLobbyCooldown = 5;
+        self._lobbyWaitCooldown = self._orgLobbyCooldown;
         self._previewCam = {
             x: 0,
             y: 0,
@@ -66,10 +71,15 @@ var Lobby = class {
             py: 0,
             pz: 0
         };
-        self._lobbyWaitCooldown = 5;
         self._tick = setInterval(function() {
             self.tick();
         }, 1000)
+    }
+    set host(player) {
+        this._host = player;
+    }
+    get host() {
+        return this._host;
     }
     get objects() {
         return this._objects;
@@ -83,13 +93,34 @@ var Lobby = class {
     set weapons(arr_weapons) {
         this._weapons = arr_weapons;
     }
+    get dead_players() {
+        return this._teamsDead;
+    }
     reset() {
-        this._lobbyWaitCooldown = 30;
+        this._lobbyWaitCooldown = this._orgLobbyCooldown;
         this.status = e.LOBBY_CREATING;
-
+        this._teamsDead = [];
+        if (this._cLoaded) {
+            clearInterval(this._cLoaded);
+        }
         this.players.forEach(function(player) {
             LobbyManager.leaveLobby(player.client);
         })
+    }
+    get round() {
+        return this._round;
+    }
+    get MaxRound() {
+        return this._MaxRounds;
+    }
+    set MaxRounds(rs) {
+        this._MaxRounds = rs;
+    }
+    get round_duration() {
+        return this._roundDuration;
+    }
+    set round_duration(dur) {
+        this._roundDuration = dur;
     }
     set status(s) {
         this._status = s;
@@ -99,12 +130,6 @@ var Lobby = class {
     }
     get image() {
         return this._image;
-    }
-    get rounds() {
-        return this._rounds;
-    }
-    set rounds(rs) {
-        this._rounds = rs;
     }
     get name() {
         return this._name;
@@ -196,24 +221,40 @@ var Lobby = class {
                 tPlayerNames.push(temp_team)
             });
         }
+        if (self.status == e.LOBBY_RUNNING) {
+            self.round_duration -= 1;
+            if (self.round_duration <= 0) {
+                self.end();
+            }
+            let dead_teams = Object.keys(this._teamsDead).map(e => {
+                return this._teamsDead[e];
+            })
+            console.log("dead_teams",dead_teams);
+
+            self.players.forEach(function(player) {
+                player.client.call("GP:RoundInfo", [self.round_duration,JSON.stringify(dead_teams)]);
+            });
+        }
         if (self.players.length > 0) {
             self.players.forEach(function(player) {
                 if (player.ready == 0) {
                     player.ready = 1;
-                    if (player.client.class.getState == "waitingLobby") {
-                        player.client.class.updateState("readyLobby");
+                    if (player.client.interface.getState == "waitingLobby") {
+                        player.client.interface.updateState("readyLobby");
+                        player.client.setVariable("current_status", "cam");
+                        console.log(JSON.stringify(self._previewCam));
                         player.client.call("GP:LobbyCam", [JSON.stringify(self._previewCam)]);
                     }
                 } else {
                     player.client.call("GP:Ping");
                 }
                 if (self.status == e.LOBBY_WAITING) {
-                    player.client.call("GP:LobbyUpdate", [JSON.stringify(tPlayerNames)]);
+                    player.client.call("GP:LobbyUpdate", [JSON.stringify(tPlayerNames), self._lobbyWaitCooldown]);
                 }
             })
             if (self.status == e.LOBBY_STARTING) {
-                self.start();
-                console.log("start()");
+                self.prepare();
+                console.log("prepare()");
             }
             if (self.status == e.LOBBY_COUNTDOWN) {
                 self.players.forEach(function(player) {
@@ -248,8 +289,9 @@ var Lobby = class {
             } else if (self.status == e.LOBBY_COUNTDOWN_GO) {
                 self.status = e.LOBBY_RUNNING;
                 self.players.forEach(function(player) {
-                    player.client.call("GP:StartGame");
+                    player.client.call("GP:ScaleForm", ["Go!"]);
                 });
+                self.start();
             }
         }
     }
@@ -260,24 +302,40 @@ var Lobby = class {
     }
     start() {
         let self = this;
+        self.players.forEach(function(player) {
+            player.client.setVariable("current_status", "ingame");
+            player.client.call("GP:StartGame");
+        });
+    }
+    prepare() {
+        let self = this;
         if (self.status == e.LOBBY_STARTING) {
             self.status = e.LOBBY_PREPARING;
             console.log("status" + e.LOBBY_PREPARING);
             let spawns = JSON.parse(JSON.stringify(self._spawnpoints));
             self._teams.forEach(function(e, i) {
-                let spawns = self._spawnpoints.filter(e => {
-                    return e.team = i;
+                console.log("team", e.name);
+                let team_spawns = spawns.filter(e => {
+                    return e.team == i;
                 })
                 let team = i;
                 let clothing = e.clothing;
+                console.log("clothing", clothing);
+                console.log("team spawns", team_spawns);
                 self.players.forEach(function(e) {
                     if (e.team == team) {
-                        let spawn_pos = spawns.pop();
-                        console.log("spawn player at", spawn_pos.x, spawn_pos.y, spawn_pos.z, spawn_pos.heading, clothing, self._dim);
-                        e.client.class.spawn(spawn_pos.x, spawn_pos.y, spawn_pos.z, spawn_pos.heading, clothing);
-                        //e.client.class.setEquipment(self.weapons);
-                        e.client.call("GP:StartCam");
-                        e.client.call("Lobby:LoadObjects", [self.id, JSON.stringify(self.objects)]);
+                        let spawn_pos = team_spawns.pop();
+                        if (spawn_pos) {
+                            console.log("spawn player at", spawn_pos, clothing, self._dim);
+                            e.client.interface.spawn(spawn_pos.x, spawn_pos.y, spawn_pos.z, spawn_pos.heading, clothing);
+                            e.client.interface.setEquipment(self.weapons);
+                            e.client.setVariable("team", team);
+                            e.client.setVariable("current_status", "cam");
+                            e.client.call("GP:StartCam");
+                            e.client.call("Lobby:LoadObjects", [self.id, JSON.stringify(self.objects)]);
+                        } else {
+                            self.reset();
+                        }
                     }
                 });
             });
@@ -295,6 +353,41 @@ var Lobby = class {
             }, 5000);
         }
     }
+    end() {
+        this.status = e.LOBBY_ENDING;
+        console.log("round enderino");
+    }
+    killed(victim, killer) {
+        let self = this;
+        let pos = victim.position;
+        let model = victim.model;
+        let heading = victim.heading;
+        victim = this.players.find(function(player) {
+            return player.client == victim;
+        });
+        console.log("victim", victim);
+        killer = this.players.find(function(player) {
+            return player.client == killer;
+        });
+        console.log("killer", killer);
+        let victim_team = this.teams.find(function(e, i) {
+            return victim.team == i;
+        });
+        console.log("KILLED VICTIM KILLER");
+        console.log("team", victim_team);
+        let clothes = JSON.stringify(victim_team.clothing);
+        this.players.forEach(function(player) {
+            player.client.call("GP:DummyBody", [pos.x, pos.y, pos.z, model, heading, clothes]);
+        });
+        if (!this._teamsDead[victim_team]) {
+            this._teamsDead[victim_team] = [];
+        }
+        this._teamsDead[victim_team].push(victim);
+        if (this._teamsDead[victim_team].length >= victim_team.players) {
+            console.log(victim_team.name, "team 0 survivors");
+            self.end();
+        }
+    }
     getPlayer(player) {
         let p = this._players.find(e => {
             return e.client == player;
@@ -309,15 +402,25 @@ var Lobby = class {
         if (this.teams[team]) {
             if ((this.player_count + 1) <= this.max_players) {
                 console.log("team exists", team, this.teams[team])
-                this._players.push({
-                    client: player,
-                    team: team,
-                    kills: 0,
-                    deaths: 0,
-                    assists: 0,
-                    ready: 0
-                })
-                return e.LOBBY_JOIN_SUCCESS
+                if ((this.teams[team].players + 1) <= this.teams[team].max) {
+                    if (this.player_count == 0) {
+                        this.host = player;
+                    }
+                    this._lobbyWaitCooldown = this._orgLobbyCooldown;
+                    player.interface.lobby = this.id;
+                    this._players.push({
+                        client: player,
+                        team: team,
+                        kills: 0,
+                        deaths: 0,
+                        assists: 0,
+                        ready: 0
+                    })
+                    player.setVariable("current_status", "lobby");
+                    return e.LOBBY_JOIN_SUCCESS
+                } else {
+                    return e.LOBBY_JOIN_FAIL_TEAM_FULL;
+                }
             } else {
                 return e.LOBBY_JOIN_FAIL_FULL
             }
@@ -373,16 +476,11 @@ var LobbyManager = new class {
         console.log("TODO getLobbyPlayerIsIn(lobby.js)")
         return;
     }
-    getLobbyById(player) {
-        console.log("TODO getLobbyPlayerIsIn(lobby.js)")
-        return;
-    }
     createLobby(map) {}
     deleteLobby(id) {}
-    leaveLobby(player) {
-    }
+    leaveLobby(player) {}
     joinLobby(player, id, teamIndex) {
-        if (player.class) {
+        if (player.interface) {
             console.log("joinLobby");
             let lobby = this.getLobbyByID(id);
             if (lobby) {
@@ -390,7 +488,7 @@ var LobbyManager = new class {
                 let lobbyRequest = lobby.join(player, teamIndex);
                 if (lobbyRequest == e.LOBBY_JOIN_SUCCESS) {
                     console.log("join success", e.LOBBY_JOIN_SUCCESS);
-                    player.class.updateState("waitingLobby");
+                    player.interface.updateState("waitingLobby");
                     player.call("Lobby:Hide");
                 } else {
                     player.call("Lobby:Error", [JSON.stringify({
@@ -469,18 +567,17 @@ var LobbyManager = new class {
 
 */
 mp.events.add("LobbyManager:LoadingFinished", function(player, lID) {
-    if (player.class) {
+    if (player.interface) {
         console.log("LobbyManager:LoadingFinished");
         let lobby = LobbyManager.getLobbyByID(lID);
-        let pLobby = LobbyManager.getLobbyPlayerIsIn(player);
-        if (lobby == pLobby) {
-            pLobby.loaded(player);
+        if (lobby) {
+            lobby.loaded(player);
         }
     }
 });
 mp.events.add("LobbyManager:Join", function(player, id, teamIndex) {
-    if (player.class) {
-        if (player.class.getState == "lobby") {
+    if (player.interface) {
+        if (player.interface.getState == "lobby") {
             console.log("join lobby");
             LobbyManager.joinLobby(player, id, teamIndex);
         }

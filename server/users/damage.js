@@ -104,6 +104,7 @@ hashes: {
     getBoneMul(bone) {
         if (this.bone_mul[bone]) {
             return this.bone_mul[bone] || 1;
-        }
+        } 
+        return 1;
     }
 }
