@@ -183,8 +183,8 @@ var LobbyManager = new class {
         $("#modal_lobby").hide();
     }
     hide() {
+        this.close();
         $("#lobbies").hide();
-        $("#modal_lobby").hide();
     }
     show() {
         $("#lobbies").show();
@@ -207,10 +207,15 @@ function cef_hidelobby() {
 function cef_hidewaitingLobby() {
     $("#lobby_waiting").hide();
 }
+let tts = 0;
 
-function cef_waitingLobby(teams) {
+function cef_waitingLobby(teams, timeToStart) {
     console.log("cef_waitingLobby", teams);
-    let xHtml = `<div class="info">Waiting for players...</div>`;
+    let s_string = "";
+    if (tts != timeToStart) {
+        s_string = "Starting in " + (parseInt(tts) - 1);
+    }
+    let xHtml = `<div class="info">Waiting for players... ${s_string}</div>`;
     teams.forEach(function(team) {
         xHtml += `<div class="team"><div class="name">${team.name}</div><div class="players">`
         team.players.forEach(function(player) {
@@ -220,6 +225,7 @@ function cef_waitingLobby(teams) {
     })
     $("#lobby_waiting").html(xHtml);
     $("#lobby_waiting").show();
+    tts = timeToStart;
 }
 
 function cef_notification(n) {
