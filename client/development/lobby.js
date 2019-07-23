@@ -1,10 +1,11 @@
 //Lobbies
 var CEFBrowser = require("./browser.js");
+var natives = require("./natives.js");
 var cache = {};
 cache.maps = [];
 cache.lobbies = [];
 mp.gpGameStarted = false;
-mp.events.add("UI:Lobbies", (allMaps, current_lobbies) => {
+mp.events.add("Lobby:Update", (allMaps, current_lobbies) => {
     cache.maps = JSON.parse(allMaps);
     cache.lobbies = JSON.parse(current_lobbies);
     /*mp.players.local.position = new mp.Vector3(0, 0, 0);
@@ -21,16 +22,24 @@ mp.events.add("UI:Lobbies", (allMaps, current_lobbies) => {
     camera3.setActiveWithInterp(mp.defaultCam.handle, 60 * 1000 * 10, 0, 0);
     mp.defaultCam = camera3;*/
     CEFBrowser.call("cef_loadLobbies", cache.lobbies)
-    CEFBrowser.call("cef_loadlobby")
-    CEFBrowser.cursor(true);
     mp.gpGameStarted = false;
-    mp.game.ui.displayHud(false);
-    mp.game.ui.displayRadar(false);
-    mp.game.graphics.transitionToBlurred(1);
+});
+mp.events.add("Lobby:Show", (state) => {
+    if (state) {
+        mp.game.ui.displayHud(false);
+        CEFBrowser.cursor(true);
+        CEFBrowser.call("cef_loadlobby")
+        mp.game.ui.displayRadar(false);
+        mp.game.graphics.transitionToBlurred(1);
+    } else {
+        mp.game.ui.displayHud(true);
+        CEFBrowser.cursor(false);
+        CEFBrowser.call("cef_hidelobby")
+        mp.game.ui.displayRadar(true);
+        mp.game.graphics.transitionFromBlurred(1);
+    }
 });
 mp.events.add("Lobby:Reset", () => {
-
-
     mp.gpGameStarted = false;
     mp.game.ui.displayHud(true);
     mp.game.ui.displayRadar(true);
@@ -39,7 +48,6 @@ mp.events.add("Lobby:Reset", () => {
 mp.events.add("Lobby:Hide", () => {
     CEFBrowser.cursor(false);
     CEFBrowser.call("cef_hidelobby")
-
 });
 mp.events.add("Lobby:Join", (id, teamIndex) => {
     console.log("Join Lobby", id, teamIndex);
@@ -48,44 +56,73 @@ mp.events.add("Lobby:Join", (id, teamIndex) => {
 });
 mp.events.add("Lobby:LoadObjects", (id, objects) => {
     console.log("Lobby:LoadObjects", id, objects);
+    mp.events.callRemote("LobbyManager:LoadingFinished", id);
     //LobbyManager:Join
 });
 mp.events.add("GP:StartCam", () => {
     if (mp.gpGameStarted == false) {
         mp.gpGameStarted = true;
-        let camera4 = mp.cameras.new('default', new mp.Vector3(mp.players.local.position.x, mp.players.local.position.y, mp.players.local.position.z), new mp.Vector3(), 70);
-        camera4.pointAtCoord(mp.players.local.position.x, mp.players.local.position.y, mp.players.local.position.z);
-        camera4.setActive(true);
-        camera4.setActiveWithInterp(mp.defaultCam.handle, 5000, 0, 0);
-        mp.defaultCam = camera4;
         CEFBrowser.call("cef_hidewaitingLobby");
+        let cur_z = mp.defaultCam.getCoord().z;
+        let camera2 = mp.cameras.new('default', new mp.Vector3(mp.players.local.position.x, mp.players.local.position.y, cur_z), new mp.Vector3(), 60);
+        camera2.pointAtCoord(mp.players.local.position.x, mp.players.local.position.y, mp.players.local.position.z);
+        camera2.setActiveWithInterp(mp.defaultCam.handle, 500, 1, 1);
+        mp.defaultCam = camera2;
         setTimeout(function() {
-            mp.game.cam.renderScriptCams(false, false, 0, true, false);
-        },4500);
+            let camera4 = mp.cameras.new('default', new mp.Vector3(mp.players.local.position.x, mp.players.local.position.y, mp.players.local.position.z + 0.5), new mp.Vector3(), 70);
+            camera4.pointAtCoord(mp.players.local.position.x, mp.players.local.position.y, mp.players.local.position.z);
+            camera4.setActive(true);
+            mp.game.cam.renderScriptCams(true, false, 0, true, false);
+            mp.game.cam.doScreenFadeOut(3500);
+            camera4.setActiveWithInterp(mp.defaultCam.handle, 3500, 1, 1);
+            mp.defaultCam = camera4;
+            setTimeout(function() {
+                mp.game.cam.renderScriptCams(false, false, 0, true, false);
+                setTimeout(function() {
+                    mp.game.cam.doScreenFadeIn(500);
+                }, 200)
+            }, 3500);
+        }, 1000);
     }
 });
 mp.events.add("GP:ScaleForm", (s) => {
     if (mp.gpGameStarted == true) {
-        mp.game.ui.messages.showShard(s, "Countdown..", 1, 0, 2000);
+        mp.game.ui.messages.showShard(s, "", 1, 0, 2000);
     }
 });
 mp.events.add("GP:LobbyCam", (lobbyCam) => {
     if (mp.gpGameStarted == false) {
-        lobbyCam = JSON.parse(lobbyCam);
-        let camera3 = mp.cameras.new('default', new mp.Vector3(lobbyCam.x, lobbyCam.y, lobbyCam.z), new mp.Vector3(), 70);
-        camera3.pointAtCoord(lobbyCam.px, lobbyCam.py, lobbyCam.pz);
-        camera3.setActive(true);
-        camera3.setActiveWithInterp(mp.defaultCam.handle, 5000, 0, 0);
+        console.log("GP:LobbyCam", JSON.stringify(lobbyCam));
         mp.players.local.freezePosition(true);
-        mp.defaultCam = camera3;
+        lobbyCam = JSON.parse(lobbyCam);
+        // game_start
+        let camera2 = mp.cameras.new('default', new mp.Vector3(mp.players.local.position.x, mp.players.local.position.y, mp.players.local.position.z + 2), new mp.Vector3(), 60);
+        camera2.pointAtCoord(mp.players.local.position.x, mp.players.local.position.y, mp.players.local.position.z);
+        camera2.setActive(true);
+        mp.defaultCam = camera2;
+        mp.game.cam.renderScriptCams(true, false, 0, true, false);
+        //
+        setTimeout(function() {
+            let camera3 = mp.cameras.new('default', new mp.Vector3(mp.players.local.position.x, mp.players.local.position.y, mp.players.local.position.z + 300), new mp.Vector3(), 60);
+            camera3.pointAtCoord(mp.players.local.position.x, mp.players.local.position.y, mp.players.local.position.z);
+            camera3.setActiveWithInterp(mp.defaultCam.handle, 1000, 1, 1);
+            mp.defaultCam = camera3;
+            setTimeout(function() {
+                let camera4 = mp.cameras.new('default', new mp.Vector3(lobbyCam.x, lobbyCam.y, lobbyCam.z), new mp.Vector3(), 60);
+                camera4.pointAtCoord(lobbyCam.px, lobbyCam.py, lobbyCam.pz);
+                camera4.setActiveWithInterp(mp.defaultCam.handle, 5000, 1, 1);
+                mp.defaultCam = camera4;
+            }, 1100)
+        }, 100)
     }
 });
-mp.events.add("GP:LobbyUpdate", (lobbyData) => {
+mp.events.add("GP:LobbyUpdate", (lobbyData, timeTillStart) => {
     if (mp.gpGameStarted == false) {
         lobbyData = JSON.parse(lobbyData);
-        CEFBrowser.call("cef_waitingLobby", lobbyData);
+        CEFBrowser.call("cef_waitingLobby", lobbyData, timeTillStart);
     }
 });
+var temp_bodies = [];
 mp.events.add("GP:StartGame", () => {
     mp.game.cam.renderScriptCams(false, false, 0, true, false);
     mp.game.player.setTargetingMode(1);
@@ -100,12 +137,48 @@ mp.events.add("GP:StartGame", () => {
     mp.gui.chat.show(true);
     mp.players.local.freezePosition(false);
     mp.game.graphics.transitionFromBlurred(1);
+    mp.game.gameplay.setFadeOutAfterDeath(false);
+    temp_bodies.forEach(function(cPed, i) {
+        cPed.destroy();
+        temp_bodies.splice(i);
+    })
 })
-
-
+mp.events.add('render', (nametags) => {
+    mp.peds.forEachInStreamRange(cPed => {
+        if (cPed.IsDummy) {
+            cPed.setNoCollision(mp.players.local.handle, false);
+            cPed.setCanRagdoll(true);
+            cPed.setRagdollOnCollision(true);
+            cPed.setCanRagdollFromPlayerImpact(true);
+            cPed.setInvincible(false);
+            cPed.setCanBeDamaged(true);
+            cPed.setOnlyDamagedByPlayer(false);
+            cPed.setToRagdoll(5000, 50000, 0, false, false, false)
+        }
+    })
+});
+mp.events.add("GP:DummyBody", (x, y, z, model, heading, clothing) => {
+    clothing = JSON.parse(clothing);
+    let cur = new mp.Vector3(x, y, z);
+    let Ped = mp.peds.new(model, cur, heading- 90, mp.players.local.dimension);
+    Ped.IsDummy = true;
+    Ped.freezePosition(false);
+    Ped.setNoCollision(mp.players.local.handle, false);
+    Ped.setCanRagdoll(true);
+    Ped.setToRagdoll(5000, 50000, 0, false, false, false)
+    let n_cur = cur.findRot(0, 2, heading - 90);
+    Ped.setVelocity((cur.x - n_cur.x), (cur.y - n_cur.y) , (cur.z - n_cur.z) );
+    //console.log(x, y, z, model, clothing);
+    clothing.forEach(function(part) {
+        Ped.setComponentVariation(part.componentNumber, part.drawable, part.texture, part.palette);
+    })
+    let time = 60 * 60 * 1000;
+    temp_bodies.push(Ped);
+});
 var GP_CheckFailed = 0;
 var GP_LastCheck = 0;
 var GP_TimeStamp = 0;
+var LB_Updates = -1;
 
 function GP_CheckConnectivity() {
     if (mp.gpGameStarted == true) {
@@ -125,6 +198,15 @@ function GP_CheckConnectivity() {
                 console.log("Set to Inactive...");
                 mp.players.local.freezePosition(true);
                 mp.game.graphics.transitionToBlurred(1);
+            }
+        }
+    } else {
+        if (mp.players.local.getVariable("spawned")) {
+            LB_Updates++;
+            if (LB_Updates > 5) {
+                LB_Updates = 0;
+                console.log("request lobby");
+                mp.events.callRemote("User:RequestLobby");
             }
         }
     }

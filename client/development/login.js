@@ -15,7 +15,6 @@ mp.events.add("Server:RequestLogin", () => {
         CEFBrowser.call("cef_loadlogin", mp.players.local.name)
         let camera2 = mp.cameras.new('default', new mp.Vector3(-93.45111846923828, -826.1639404296875, 333.6698303222656), new mp.Vector3(), 70);
         camera2.pointAtCoord(-76.66345977783203, -818.8128051757812, 327.5135498046875);
-        camera2.setActive(true);
         camera2.setActiveWithInterp(mp.defaultCam.handle, 60 * 1000 * 10, 0, 0);
         mp.defaultCam = camera2;
         mp.game.streaming.setHdArea(-76.66345977783203, -818.8128051757812, 327.5135498046875, 327.5135498046875);
