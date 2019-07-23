@@ -13,6 +13,7 @@ var enums = {
     LOBBY_COUNTDOWN_2:enum_count++,
     LOBBY_COUNTDOWN_1:enum_count++,
     LOBBY_COUNTDOWN_GO:enum_count++,
+    LOBBY_ENDING:enum_count++,
 	LOGIN_OK:enum_count++,
 	LOGIN_FAILED:enum_count++,
 	LOGIN_PASSWORD_WRONG:enum_count++,
@@ -27,7 +28,7 @@ var enums = {
     LOBBY_NOT_EXISTS:enum_count++,
     LOBBY_JOIN_FAIL_FULL:enum_count++,
     LOBBY_JOIN_FAIL_TEAM_INVALID:enum_count++,
-    LOBBY_JOIN_FAIL_TEAM_INVALID:enum_count++,
+    LOBBY_JOIN_FAIL_TEAM_FULL:enum_count++,
     LOBBY_PLAYER_NOT_FOUND:enum_count++,
     LOBBY_MAP_NOT_FOUND:enum_count++,
 }

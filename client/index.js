@@ -62,38 +62,415 @@ class CEFBrowser {
 }
 module.exports = new CEFBrowser("index.html");
 },{}],2:[function(require,module,exports){
+const statNames = ["SP0_STAMINA﻿", "SP0_STRENGTH", "SP0_LUNG_CAPACITY", "SP0_WHEELIE_ABILITY", "SP0_FLYING_ABILITY", "SP0_SHOOTING_ABILITY", "SP0_STEALTH_ABILITY"];
+// maybe playerReady can be used instead, haven't tested
+mp.events.add("playerSpawn", () => {
+    for (const stat of statNames) mp.game.stats.statSetInt(mp.game.joaat(stat), 100, false);
+});
+var player_bones = {
+    "SKEL_L_UpperArm": {
+        bone_id: 45509,
+        threshold: 0.08,
+        offset: {
+            x: 0,
+            y: 0,
+            z: 0
+        }
+    },
+    "SKEL_R_UpperArm": {
+        bone_id: 40269,
+        threshold: 0.08,
+        offset: {
+            x: 0,
+            y: 0,
+            z: 0
+        }
+    },
+    "SKEL_L_Forearm": {
+        bone_id: 61163,
+        threshold: 0.08,
+        offset: {
+            x: 0,
+            y: 0,
+            z: 0
+        }
+    },
+    "SKEL_R_Forearm": {
+        bone_id: 28252,
+        threshold: 0.08,
+        offset: {
+            x: 0,
+            y: 0,
+            z: 0
+        }
+    },
+    "SKEL_Head": {
+        bone_id: 31086,
+        threshold: 0.15,
+        offset: {
+            x: 0,
+            y: 0,
+            z: 0
+        }
+    },
+    "SKEL_R_Hand": {
+        bone_id: 57005,
+        threshold: 0.06,
+        offset: {
+            x: 0,
+            y: 0,
+            z: 0
+        }
+    },
+    "SKEL_L_Hand": {
+        bone_id: 18905,
+        threshold: 0.06,
+        offset: {
+            x: 0,
+            y: 0,
+            z: 0.05
+        }
+    },
+    "SKEL_R_Clavicle": {
+        bone_id: 10706,
+        threshold: 0.1,
+        offset: {
+            x: 0,
+            y: 0,
+            z: 0
+        }
+    },
+    "SKEL_L_Clavicle": {
+        bone_id: 64729,
+        threshold: 0.1,
+        offset: {
+            x: 0,
+            y: 0,
+            z: 0
+        }
+    },
+    "SKEL_Spine0": {
+        bone_id: 23553,
+        threshold: 0.15,
+        offset: {
+            x: 0,
+            y: 0,
+            z: 0
+        }
+    },
+    "SKEL_Spine1": {
+        bone_id: 24816,
+        threshold: 0.15,
+        offset: {
+            x: 0,
+            y: 0,
+            z: 0
+        }
+    },
+    "SKEL_Spine2": {
+        bone_id: 24817,
+        threshold: 0.15,
+        offset: {
+            x: 0,
+            y: 0,
+            z: 0
+        }
+    },
+    "SKEL_Spine3": {
+        bone_id: 24818,
+        threshold: 0.15,
+        offset: {
+            x: 0,
+            y: 0,
+            z: 0
+        }
+    },
+    "SKEL_R_Calf": {
+        bone_id: 36864,
+        threshold: 0.08,
+        offset: {
+            x: 0,
+            y: 0,
+            z: 0
+        }
+    },
+    "SKEL_L_Calf": {
+        bone_id: 63931,
+        threshold: 0.08,
+        offset: {
+            x: 0,
+            y: 0,
+            z: 0
+        }
+    },
+    "SKEL_L_Thigh": {
+        bone_id: 58271,
+        threshold: 0.08,
+        offset: {
+            x: 0,
+            y: 0,
+            z: 0
+        }
+    },
+    "SKEL_R_Thigh": {
+        bone_id: 51826,
+        threshold: 0.08,
+        offset: {
+            x: 0,
+            y: 0,
+            z: 0
+        }
+    },
+    "SKEL_R_Foot": {
+        bone_id: 52301,
+        threshold: 0.08,
+        offset: {
+            x: 0,
+            y: 0,
+            z: 0
+        }
+    },
+    "SKEL_L_Foot": {
+        bone_id: 14201,
+        threshold: 0.08,
+        offset: {
+            x: 0,
+            y: 0,
+            z: 0
+        }
+    }
+}
+
+function getWeaponDetails(weapon) {
+    if (shotgunSpreadData[weapon]) return shotgunSpreadData[weapon]
+    else return {
+        spray: 1.5,
+        max_dist: 30
+    };
+}
+
+function getIsHitOnBone(hitPosition, target) {
+    let nearest_bone = "";
+    let nearest_bone_dist = 99;
+    if (target != null) {
+        for (let bone in player_bones) {
+            let bone_id = player_bones[bone].bone_id;
+            let offset = player_bones[bone].offset;
+            let threshold = player_bones[bone].threshold;
+            let headPos = mp.players.local.getBoneCoords(12844, 0, 0, 0);
+            let pos = target.getBoneCoords(bone_id, offset.x, offset.y, offset.z);
+            let raycast = mp.raycasting.testPointToPoint(hitPosition, pos, mp.players.local, (2));
+            let hit_dist = mp.game.system.vdist(hitPosition.x, hitPosition.y, hitPosition.z, pos.x, pos.y, pos.z);
+            if (hit_dist < 1.6) {
+                let vector = new mp.Vector3(hitPosition.x - headPos.x, hitPosition.y - headPos.y, hitPosition.z - headPos.z);
+                let dist_aim = mp.game.system.vdist(hitPosition.x, hitPosition.y, hitPosition.z, headPos.x, headPos.y, headPos.z);
+                let vectorNear = vector.normalize(dist_aim);
+                //....
+                let dist = mp.game.system.vdist(pos.x, pos.y, pos.z, headPos.x, headPos.y, headPos.z);
+                let vectorAtPos = vectorNear.multiply(dist);
+                let aimdist = mp.game.system.vdist(pos.x, pos.y, pos.z, headPos.x + vectorAtPos.x, headPos.y + vectorAtPos.y, headPos.z + vectorAtPos.z)
+                if (nearest_bone_dist > aimdist) {
+                    if (aimdist <= threshold) {
+                        nearest_bone = bone;
+                        nearest_bone_dist = aimdist;
+                    }
+                }
+            }
+        }
+    }
+    return {
+        hit: (nearest_bone != "" ? true : false),
+        bone: nearest_bone,
+        dist: nearest_bone_dist
+    };
+}
+
+function isWallbugging(target_position) {
+    let gun_pos = mp.players.local.getBoneCoords(40269, 0, 0, 0);
+    let raycast = mp.raycasting.testPointToPoint(target_position, gun_pos, mp.players.local, -1);
+    if (raycast) {
+        let hit_pos = raycast.position;
+        let entry_point = new mp.Vector3(hit_pos.x - gun_pos.x, hit_pos.y - gun_pos.y, hit_pos.z - gun_pos.z);
+        let entry_dist = mp.game.system.vdist(hit_pos.x, hit_pos.y, hit_pos.z, gun_pos.x, gun_pos.y, gun_pos.z);
+        let entry_normalize = entry_point.normalize(entry_dist / 2);
+        let entry_final_point = entry_normalize.multiply(entry_dist / 2);
+        let entry_point_vector = new mp.Vector3(hit_pos.x + entry_final_point.x, hit_pos.y + entry_final_point.y, hit_pos.z + entry_final_point.z)
+        let exit_point_vector = new mp.Vector3(hit_pos.x - entry_final_point.x, hit_pos.y - entry_final_point.y, hit_pos.z - entry_final_point.z)
+        let entry_point_pos = mp.raycasting.testPointToPoint(entry_point_vector, exit_point_vector, mp.players.local, -1);
+        let exit_point_pos = mp.raycasting.testPointToPoint(exit_point_vector, entry_point_vector, mp.players.local, -1);
+        if ((entry_point_pos) && (exit_point_pos)) {
+            let dist = mp.game.system.vdist(entry_point_pos.position.x, entry_point_pos.position.y, entry_point_pos.position.z, exit_point_pos.position.x, exit_point_pos.position.y, exit_point_pos.position.z)
+            if (dist < 0.45) {
+                return false;
+            } else {
+                return true;
+            }
+        } else {
+            return true;
+        }
+    } else {
+        return false;
+    }
+}
+
+function calculateShotgunPelletsOnPlayers() {
+    let hitted_entity = null;
+    var gun_pos = mp.players.local.getBoneCoords(40269, 0, 0, 0);
+    let aim_point = mp.players.local.aimingAt;
+    let raycast = mp.raycasting.testPointToPoint(aim_point, gun_pos, mp.players.local, -1);
+    if (!raycast) {
+        mp.players.forEachInStreamRange((ped) => {
+            if (mp.players.local != ped) {
+                let pos = ped.getWorldPositionOfBone(ped.getBoneIndexByName("IK_Head"));
+                let raycast1 = mp.raycasting.testPointToPoint(gun_pos, pos, mp.players.local, -1);
+                if (!raycast1) {
+                    let headPos = mp.players.local.getBoneCoords(12844, 0, 0, 0);
+                    let vector = new mp.Vector3(aim_point.x - headPos.x, aim_point.y - headPos.y, aim_point.z - headPos.z);
+                    let dist_aim = mp.game.system.vdist(aim_point.x, aim_point.y, aim_point.z, headPos.x, headPos.y, headPos.z);
+                    let vectorNear = vector.normalize(dist_aim);
+                    //....
+                    let dist = mp.game.system.vdist(pos.x, pos.y, pos.z, headPos.x, headPos.y, headPos.z);
+                    let vectorAtPos = vectorNear.multiply(dist);
+                    let aim_vector = new mp.Vector3(headPos.x + vectorAtPos.x, headPos.y + vectorAtPos.y, headPos.z + vectorAtPos.z);
+                    let spray_dist = mp.game.system.vdist(pos.x, pos.y, pos.z, headPos.x + vectorAtPos.x, headPos.y + vectorAtPos.y, headPos.z + vectorAtPos.z)
+                    let ped_dist = mp.game.system.vdist(pos.x, pos.y, pos.z, gun_pos.x, gun_pos.y, gun_pos.z)
+                    let w_data = getWeaponDetails(Number(mp.players.local.weapon));
+                    if (w_data) {
+                        let spray_size = lerp(0.5, w_data.spray, 1 / w_data.max_dist * ped_dist)
+                        if (spray_size > w_data.spray) spray_size = w_data.spray;
+                        let would_hit = false;
+                        if (spray_size > spray_dist) would_hit = true;
+                        if (would_hit == true) {
+                            hitted_entity = ped;
+                        }
+                    }
+                }
+            }
+        });
+    }
+    return hitted_entity;
+}
+mp.events.add('playerWeaponShot', (targetPosition, targetEntity) => {
+    let weapon_hash = mp.players.local.weapon;
+    let ammo = mp.players.local.getAmmoInClip(weapon_hash);
+    mp.events.callRemote("Combat:FireWeapon", weapon_hash.toString(), ammo);
+    mp.game.player.setTargetingMode(1);
+    mp.game.player.setLockon(false);
+    mp.game.player.setLockonRangeOverride(0.0);
+    targetEntity = mp.players.local;
+    if (isWallbugging(targetPosition) == false) {
+        if (targetEntity) {
+            let bone = getIsHitOnBone(targetPosition, targetEntity).bone;
+            mp.events.callRemote("Combat:Hit", targetEntity, weapon_hash.toString(), bone.toString());
+        } else {
+            if (mp.game.weapon.getWeapontypeGroup(weapon_hash) == 860033945) {
+                let shotgunHitEntity = calculateShotgunPelletsOnPlayers();
+                if (shotgunHitEntity != null) {
+                    mp.events.callRemote("Combat:Hit", shotgunHitEntity, weapon_hash.toString());
+                }
+            }
+        }
+    }
+});
+var curHealth = 100;
+var curArmor = 100;
+mp.events.add('AC:SetHealth', (h) => {
+    curHealth = h;
+    console.log("curHealth", h);
+});
+mp.events.add('AC:SetArmor', (a) => {
+    curArmor = a;
+    console.log("curArmor", a);
+});
+var timerHitmarker = 0;
+var timerHitmarkerDeath = 0;
+mp.events.add("render", () => {
+    mp.game.player.resetStamina();
+    if (!mp.game.graphics.hasStreamedTextureDictLoaded("hud_reticle")) {
+        mp.game.graphics.requestStreamedTextureDict("hud_reticle", true);
+    }
+    if (mp.game.graphics.hasStreamedTextureDictLoaded("hud_reticle")) {
+        if ((Date.now() / 1000 - timerHitmarker) <= 0.1) {
+            mp.game.graphics.drawSprite("hud_reticle", "reticle_ar", 0.5, 0.5, 0.025, 0.040, 45, 255, 255, 255, 150);
+        }
+        if ((Date.now() / 1000 - timerHitmarkerDeath) <= 0.1) {
+            mp.game.graphics.drawSprite("hud_reticle", "reticle_ar", 0.5, 0.5, 0.025, 0.040, 45, 255, 100, 100, 150);
+        }
+    }
+    if (curHealth > mp.players.local.getHealth()) {
+        curHealth = mp.players.local.getHealth()
+        console.log("trigger hp set", curHealth);
+        mp.events.callRemote("User:ResyncHealth", curHealth);
+    }
+    if (curArmor > mp.players.local.getArmour()) {
+        curArmor = mp.players.local.getArmour()
+        mp.events.callRemote("User:ResyncArmor", curArmor);
+        console.log("trigger armor set", curArmor);
+    }
+    if ((curHealth == 0) && (mp.players.local.getHealth() != 0)) {
+        mp.players.local.setHealth(curHealth);
+        console.log("set death");
+    }
+});
+mp.events.add("Combat:Hit", (dmg) => {
+    console.log("Combat:Hit", dmg);
+    timerHitmarker = Date.now() / 1000;
+});
+mp.events.add("Combat:Kill", () => {
+    console.log("Combat:Kill");
+    timerHitmarkerDeath = Date.now() / 1000;
+});
+mp.events.add("Combat:Hitted", (dmg) => {
+    mp.players.local.setOnlyDamagedByPlayer(false);
+    mp.players.local.setProofs(true, false, false, false, false, false, false, false);
+    console.log("Combat:Hitted", dmg);
+});
+
+
+
+},{}],3:[function(require,module,exports){
 //mp.gpGameStarted
 var HUB = new class {
 	constructor() {
+		let self = this;
 		this._safezones = [];
 		this._allowedWeapons = [];
 		this._allowedVehicles = [];
-
-
+		this._inSafeZone = false;
+		this._safeZoneTImer = setInterval(function() {
+			self.checkSafezones();
+		}, 1000);
 	}
-	loadData(safeZones,weapons,vehicles) {
+	loadData(safeZones, weapons, vehicles) {
 		this._safezones = safeZones;
 		this._allowedVehicles = vehicles;
 		this._allowedWeapons = weapons;
 	}
-
-
+	checkSafezones() {}
 }
-
-
-
-
-
-
-
-
-mp.events.add("HUB:LoadData", (safeZones,weapons,vehicles) => {
-    safeZones = JSON.parse(safeZones);
-    weapons = JSON.parse(weapons);
-    vehicles = JSON.parse(vehicles);
-    HUB.loadData(safeZones,weapons,vehicles);
+mp.events.add('render', (nametags) => {
+	if (mp.players.local.getVariable("current_status") == "hub") {
+		mp.gpGameStarted = false;
+	}
+	if (mp.players.local.getVariable("current_status") == "cam") {
+		mp.game.controls.disableAllControlActions(0);
+	}
 });
-},{}],3:[function(require,module,exports){
+var LobbyState = false;
+mp.keys.bind(0x72, false, function() {
+	if (mp.gpGameStarted == false) {
+		console.log("show lobby");
+		mp.events.call("Lobby:Show", !LobbyState);
+		LobbyState = !LobbyState;
+	}
+});
+mp.events.add("HUB:LoadData", (safeZones, weapons, vehicles) => {
+	safeZones = JSON.parse(safeZones);
+	weapons = JSON.parse(weapons);
+	vehicles = JSON.parse(vehicles);
+	HUB.loadData(safeZones, weapons, vehicles);
+});
+},{}],4:[function(require,module,exports){
 "use strict";
 
 
@@ -105,9 +482,6 @@ console.log = function(...a) {
     })
     mp.gui.chat.push("DeBuG:" + a.join(" "))
 };
-mp.lerp = function(a, b, n) {
-    return (1 - n) * a + n * b;
-}
 require("./vector.js")
 require("./scaleforms/index.js");
 
@@ -119,6 +493,8 @@ var CEFBrowser = require("./browser.js");
 require("./lobby.js")
 require("./login.js")
 require("./hub.js")
+require("./nametag.js")
+require("./combat.js")
 
 
 // Account Stuff
@@ -144,7 +520,7 @@ mp.events.add('chatEnabled', (isEnabled) => {
 
 
 });
-},{"./browser.js":1,"./hub.js":2,"./libs/camerasManager.js":4,"./lobby.js":5,"./login.js":6,"./natives.js":7,"./scaleforms/index.js":11,"./vector.js":12}],4:[function(require,module,exports){
+},{"./browser.js":1,"./combat.js":2,"./hub.js":3,"./libs/camerasManager.js":5,"./lobby.js":6,"./login.js":7,"./nametag.js":8,"./natives.js":9,"./scaleforms/index.js":13,"./vector.js":14}],5:[function(require,module,exports){
 const CamerasManagerInfo = {
     gameplayCamera: null,
     activeCamera: null,
@@ -308,14 +684,15 @@ const proxyHandler = {
 };
 
 exports = new Proxy({}, proxyHandler);
-},{}],5:[function(require,module,exports){
+},{}],6:[function(require,module,exports){
 //Lobbies
 var CEFBrowser = require("./browser.js");
+var natives = require("./natives.js");
 var cache = {};
 cache.maps = [];
 cache.lobbies = [];
 mp.gpGameStarted = false;
-mp.events.add("UI:Lobbies", (allMaps, current_lobbies) => {
+mp.events.add("Lobby:Update", (allMaps, current_lobbies) => {
     cache.maps = JSON.parse(allMaps);
     cache.lobbies = JSON.parse(current_lobbies);
     /*mp.players.local.position = new mp.Vector3(0, 0, 0);
@@ -332,16 +709,24 @@ mp.events.add("UI:Lobbies", (allMaps, current_lobbies) => {
     camera3.setActiveWithInterp(mp.defaultCam.handle, 60 * 1000 * 10, 0, 0);
     mp.defaultCam = camera3;*/
     CEFBrowser.call("cef_loadLobbies", cache.lobbies)
-    CEFBrowser.call("cef_loadlobby")
-    CEFBrowser.cursor(true);
     mp.gpGameStarted = false;
-    mp.game.ui.displayHud(false);
-    mp.game.ui.displayRadar(false);
-    mp.game.graphics.transitionToBlurred(1);
+});
+mp.events.add("Lobby:Show", (state) => {
+    if (state) {
+        mp.game.ui.displayHud(false);
+        CEFBrowser.cursor(true);
+        CEFBrowser.call("cef_loadlobby")
+        mp.game.ui.displayRadar(false);
+        mp.game.graphics.transitionToBlurred(1);
+    } else {
+        mp.game.ui.displayHud(true);
+        CEFBrowser.cursor(false);
+        CEFBrowser.call("cef_hidelobby")
+        mp.game.ui.displayRadar(true);
+        mp.game.graphics.transitionFromBlurred(1);
+    }
 });
 mp.events.add("Lobby:Reset", () => {
-
-
     mp.gpGameStarted = false;
     mp.game.ui.displayHud(true);
     mp.game.ui.displayRadar(true);
@@ -350,7 +735,6 @@ mp.events.add("Lobby:Reset", () => {
 mp.events.add("Lobby:Hide", () => {
     CEFBrowser.cursor(false);
     CEFBrowser.call("cef_hidelobby")
-
 });
 mp.events.add("Lobby:Join", (id, teamIndex) => {
     console.log("Join Lobby", id, teamIndex);
@@ -359,44 +743,73 @@ mp.events.add("Lobby:Join", (id, teamIndex) => {
 });
 mp.events.add("Lobby:LoadObjects", (id, objects) => {
     console.log("Lobby:LoadObjects", id, objects);
+    mp.events.callRemote("LobbyManager:LoadingFinished", id);
     //LobbyManager:Join
 });
 mp.events.add("GP:StartCam", () => {
     if (mp.gpGameStarted == false) {
         mp.gpGameStarted = true;
-        let camera4 = mp.cameras.new('default', new mp.Vector3(mp.players.local.position.x, mp.players.local.position.y, mp.players.local.position.z), new mp.Vector3(), 70);
-        camera4.pointAtCoord(mp.players.local.position.x, mp.players.local.position.y, mp.players.local.position.z);
-        camera4.setActive(true);
-        camera4.setActiveWithInterp(mp.defaultCam.handle, 5000, 0, 0);
-        mp.defaultCam = camera4;
         CEFBrowser.call("cef_hidewaitingLobby");
+        let cur_z = mp.defaultCam.getCoord().z;
+        let camera2 = mp.cameras.new('default', new mp.Vector3(mp.players.local.position.x, mp.players.local.position.y, cur_z), new mp.Vector3(), 60);
+        camera2.pointAtCoord(mp.players.local.position.x, mp.players.local.position.y, mp.players.local.position.z);
+        camera2.setActiveWithInterp(mp.defaultCam.handle, 500, 1, 1);
+        mp.defaultCam = camera2;
         setTimeout(function() {
-            mp.game.cam.renderScriptCams(false, false, 0, true, false);
-        },4500);
+            let camera4 = mp.cameras.new('default', new mp.Vector3(mp.players.local.position.x, mp.players.local.position.y, mp.players.local.position.z + 0.5), new mp.Vector3(), 70);
+            camera4.pointAtCoord(mp.players.local.position.x, mp.players.local.position.y, mp.players.local.position.z);
+            camera4.setActive(true);
+            mp.game.cam.renderScriptCams(true, false, 0, true, false);
+            mp.game.cam.doScreenFadeOut(3500);
+            camera4.setActiveWithInterp(mp.defaultCam.handle, 3500, 1, 1);
+            mp.defaultCam = camera4;
+            setTimeout(function() {
+                mp.game.cam.renderScriptCams(false, false, 0, true, false);
+                setTimeout(function() {
+                    mp.game.cam.doScreenFadeIn(500);
+                }, 200)
+            }, 3500);
+        }, 1000);
     }
 });
 mp.events.add("GP:ScaleForm", (s) => {
     if (mp.gpGameStarted == true) {
-        mp.game.ui.messages.showShard(s, "Countdown..", 1, 0, 2000);
+        mp.game.ui.messages.showShard(s, "", 1, 0, 2000);
     }
 });
 mp.events.add("GP:LobbyCam", (lobbyCam) => {
     if (mp.gpGameStarted == false) {
-        lobbyCam = JSON.parse(lobbyCam);
-        let camera3 = mp.cameras.new('default', new mp.Vector3(lobbyCam.x, lobbyCam.y, lobbyCam.z), new mp.Vector3(), 70);
-        camera3.pointAtCoord(lobbyCam.px, lobbyCam.py, lobbyCam.pz);
-        camera3.setActive(true);
-        camera3.setActiveWithInterp(mp.defaultCam.handle, 5000, 0, 0);
+        console.log("GP:LobbyCam", JSON.stringify(lobbyCam));
         mp.players.local.freezePosition(true);
-        mp.defaultCam = camera3;
+        lobbyCam = JSON.parse(lobbyCam);
+        // game_start
+        let camera2 = mp.cameras.new('default', new mp.Vector3(mp.players.local.position.x, mp.players.local.position.y, mp.players.local.position.z + 2), new mp.Vector3(), 60);
+        camera2.pointAtCoord(mp.players.local.position.x, mp.players.local.position.y, mp.players.local.position.z);
+        camera2.setActive(true);
+        mp.defaultCam = camera2;
+        mp.game.cam.renderScriptCams(true, false, 0, true, false);
+        //
+        setTimeout(function() {
+            let camera3 = mp.cameras.new('default', new mp.Vector3(mp.players.local.position.x, mp.players.local.position.y, mp.players.local.position.z + 300), new mp.Vector3(), 60);
+            camera3.pointAtCoord(mp.players.local.position.x, mp.players.local.position.y, mp.players.local.position.z);
+            camera3.setActiveWithInterp(mp.defaultCam.handle, 1000, 1, 1);
+            mp.defaultCam = camera3;
+            setTimeout(function() {
+                let camera4 = mp.cameras.new('default', new mp.Vector3(lobbyCam.x, lobbyCam.y, lobbyCam.z), new mp.Vector3(), 60);
+                camera4.pointAtCoord(lobbyCam.px, lobbyCam.py, lobbyCam.pz);
+                camera4.setActiveWithInterp(mp.defaultCam.handle, 5000, 1, 1);
+                mp.defaultCam = camera4;
+            }, 1100)
+        }, 100)
     }
 });
-mp.events.add("GP:LobbyUpdate", (lobbyData) => {
+mp.events.add("GP:LobbyUpdate", (lobbyData, timeTillStart) => {
     if (mp.gpGameStarted == false) {
         lobbyData = JSON.parse(lobbyData);
-        CEFBrowser.call("cef_waitingLobby", lobbyData);
+        CEFBrowser.call("cef_waitingLobby", lobbyData, timeTillStart);
     }
 });
+var temp_bodies = [];
 mp.events.add("GP:StartGame", () => {
     mp.game.cam.renderScriptCams(false, false, 0, true, false);
     mp.game.player.setTargetingMode(1);
@@ -411,12 +824,48 @@ mp.events.add("GP:StartGame", () => {
     mp.gui.chat.show(true);
     mp.players.local.freezePosition(false);
     mp.game.graphics.transitionFromBlurred(1);
+    mp.game.gameplay.setFadeOutAfterDeath(false);
+    temp_bodies.forEach(function(cPed, i) {
+        cPed.destroy();
+        temp_bodies.splice(i);
+    })
 })
-
-
+mp.events.add('render', (nametags) => {
+    mp.peds.forEachInStreamRange(cPed => {
+        if (cPed.IsDummy) {
+            cPed.setNoCollision(mp.players.local.handle, false);
+            cPed.setCanRagdoll(true);
+            cPed.setRagdollOnCollision(true);
+            cPed.setCanRagdollFromPlayerImpact(true);
+            cPed.setInvincible(false);
+            cPed.setCanBeDamaged(true);
+            cPed.setOnlyDamagedByPlayer(false);
+            cPed.setToRagdoll(5000, 50000, 0, false, false, false)
+        }
+    })
+});
+mp.events.add("GP:DummyBody", (x, y, z, model, heading, clothing) => {
+    clothing = JSON.parse(clothing);
+    let cur = new mp.Vector3(x, y, z);
+    let Ped = mp.peds.new(model, cur, heading- 90, mp.players.local.dimension);
+    Ped.IsDummy = true;
+    Ped.freezePosition(false);
+    Ped.setNoCollision(mp.players.local.handle, false);
+    Ped.setCanRagdoll(true);
+    Ped.setToRagdoll(5000, 50000, 0, false, false, false)
+    let n_cur = cur.findRot(0, 2, heading - 90);
+    Ped.setVelocity((cur.x - n_cur.x), (cur.y - n_cur.y) , (cur.z - n_cur.z) );
+    //console.log(x, y, z, model, clothing);
+    clothing.forEach(function(part) {
+        Ped.setComponentVariation(part.componentNumber, part.drawable, part.texture, part.palette);
+    })
+    let time = 60 * 60 * 1000;
+    temp_bodies.push(Ped);
+});
 var GP_CheckFailed = 0;
 var GP_LastCheck = 0;
 var GP_TimeStamp = 0;
+var LB_Updates = -1;
 
 function GP_CheckConnectivity() {
     if (mp.gpGameStarted == true) {
@@ -438,6 +887,15 @@ function GP_CheckConnectivity() {
                 mp.game.graphics.transitionToBlurred(1);
             }
         }
+    } else {
+        if (mp.players.local.getVariable("spawned")) {
+            LB_Updates++;
+            if (LB_Updates > 5) {
+                LB_Updates = 0;
+                console.log("request lobby");
+                mp.events.callRemote("User:RequestLobby");
+            }
+        }
     }
 }
 setInterval(function() {
@@ -446,7 +904,7 @@ setInterval(function() {
 mp.events.add("GP:Ping", () => {
     GP_TimeStamp = Date.now();
 });
-},{"./browser.js":1}],6:[function(require,module,exports){
+},{"./browser.js":1,"./natives.js":9}],7:[function(require,module,exports){
 var CEFBrowser = require("./browser.js");
 mp.events.add("Server:RequestLogin", () => {
     mp.players.local.position = new mp.Vector3(-76.66345977783203, -818.8128051757812, 327.5135498046875);
@@ -464,7 +922,6 @@ mp.events.add("Server:RequestLogin", () => {
         CEFBrowser.call("cef_loadlogin", mp.players.local.name)
         let camera2 = mp.cameras.new('default', new mp.Vector3(-93.45111846923828, -826.1639404296875, 333.6698303222656), new mp.Vector3(), 70);
         camera2.pointAtCoord(-76.66345977783203, -818.8128051757812, 327.5135498046875);
-        camera2.setActive(true);
         camera2.setActiveWithInterp(mp.defaultCam.handle, 60 * 1000 * 10, 0, 0);
         mp.defaultCam = camera2;
         mp.game.streaming.setHdArea(-76.66345977783203, -818.8128051757812, 327.5135498046875, 327.5135498046875);
@@ -491,7 +948,96 @@ mp.events.add("UI:Error", function(...args) {
     }
     CEFBrowser.call("cef_notification", s)
 });
-},{"./browser.js":1}],7:[function(require,module,exports){
+},{"./browser.js":1}],8:[function(require,module,exports){
+mp.nametags.enabled = false;
+mp.gui.chat.colors = true;
+var blips = [];
+mp.events.add('render', (nametags) => {
+    if ((mp.players.local.getVariable("loggedIn") == true) && (mp.players.local.getVariable("spawned") == true)) {
+        if (mp.players.local.getVariable("team") != undefined) {
+            mp.players.forEachInStreamRange(function(player) {
+               // if (player != mp.players.local) {
+                    if (player.getVariable("team") == mp.players.local.getVariable("team")) {
+                        if (!blips[player.id]) {
+                            blips[player.id] = mp.blips.new(1, player.position, {
+                                color: 3,
+                                shortRange: true,
+                                scale: 0.4,
+                                alpha: 100,
+                                name: "Ally"
+                            });
+                            blips[player.id].setShowHeadingIndicator(true);
+                            blips[player.id].setCategory(1);
+                        }
+                        blips[player.id].setCoords(player.position);
+                        blips[player.id].setRotation(player.getPhysicsHeading());
+                    } else {
+                        if (blips[player.id]) {
+                            blips[player.id].destroy();
+                            blips[player.id] = null;
+                            delete blips[player.id];
+                        }
+                    }
+                //}
+            });
+        }
+        let startPosition = mp.players.local.getBoneCoords(12844, 0.5, 0, 0);
+        if ((mp.players.local.getVariable("loggedIn") == true) && (mp.players.local.getVariable("spawned") == true) && (mp.players.local.getVariable("death") == false)) {
+            mp.players.forEachInStreamRange((player) => {
+                //if (player != mp.players.local) {
+                if (mp.game.system.vdist2(startPosition.x, startPosition.y, startPosition.z, player.position.x, player.position.y, player.position.z) < 600) {
+                    if ((player.getVariable("loggedIn") == true) && (player.getVariable("spawned") == true)) {
+                        let endPosition = player.getBoneCoords(12844, 0, 0, 0);
+                        let hitData = mp.raycasting.testPointToPoint(startPosition, endPosition, mp.players.local, (1 | 16 | 256));
+                        if (!hitData) {
+                            let color = [255, 255, 255, 200];
+                            let eloScore = player.getVariable("eloScore") || 0;
+                            let r = mp.lerp(170, 255, 1 / 100 * player.getHealth())
+                            let g = mp.lerp(30, 255, 1 / 100 * player.getHealth())
+                            let b = mp.lerp(30, 255, 1 / 100 * player.getHealth())
+                            if ((1 / 100 * player.getHealth()) < 0.2) {
+                                color[0] = 170;
+                                color[1] = 30;
+                                color[2] = 30;
+                            } else {
+                                color[0] = r;
+                                color[1] = g;
+                                color[2] = b;
+                            }
+                            let lPos = mp.players.local.position;
+                            let pos = player.getWorldPositionOfBone(player.getBoneIndexByName("IK_Head"));
+                            pos.z += 0.4;
+                            let dist = mp.game.system.vdist2(lPos.x, lPos.y, lPos.z, pos.x, pos.y, pos.z);
+                            let c_dist = 1 / 800 * dist;
+                            let size = mp.lerp(0.5, 0.06, c_dist)
+                            if (size > 0.5) {
+                                size = 0.5;
+                            } else if (size < 0.06) {
+                                size = 0.06;
+                            }
+                            mp.game.graphics.setDrawOrigin(pos.x, pos.y, pos.z, 0);
+                            mp.game.graphics.drawText(player.name, [0, 0], {
+                                font: 4,
+                                color: color,
+                                scale: [size, size],
+                                outline: true
+                            });
+                            mp.game.graphics.drawText("Score " + eloScore, [0, 0.03], {
+                                font: 4,
+                                color: [255, 255, 255, 200],
+                                scale: [size / 2, size / 2],
+                                outline: true
+                            });
+                            mp.game.graphics.clearDrawOrigin()
+                        }
+                    }
+                }
+                //}
+            })
+        }
+    }
+})
+},{}],9:[function(require,module,exports){
 var natives = {};
 
 mp.game.graphics.clearDrawOrigin = () => mp.game.invoke('0xFF0B610F6BE0D7AF'); // 26.07.2018 // GTA 1.44 
@@ -513,8 +1059,9 @@ natives.DOES_BLIP_EXIST = (blip) => mp.game.invoke("0xA6DB27D19ECBB7DA", blip); 
 natives.GET_NUMBER_OF_ACTIVE_BLIPS = () => mp.game.invoke("0x9A3FF3DE163034E8"); // GET_NUMBER_OF_ACTIVE_BLIPS
 natives.SET_BLIP_SCALE = (blip,scale) => mp.game.invoke("0xD38744167B2FA257",blip,scale); // SET_BLIP_SCALE
 natives.SET_ENTITY_NO_COLLISION_ENTITY = (entity1, entity2, collision) => mp.game.invoke("0xA53ED5520C07654A", entity1.handle, entity2.handle, collision); // SET_ENTITY_NO_COLLISION_ENTITY
+natives.SET_PED_TO_RAGDOLL = ( ped,  time1,  time2,  ragdollType,  p4,  p5,  p6) => mp.game.invoke("0xAE99FB955581844A", ped,  time1,  time2,  ragdollType,  p4,  p5,  p6); // SET_PED_TO_RAGDOLL
 module.exports = natives;
-},{}],8:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
 var messageScaleform = require("./Scaleform.js");
 let bigMessageScaleform = null;
 let bigMsgInit = 0;
@@ -565,7 +1112,7 @@ mp.events.add("render", () => {
         }
     }
 });
-},{"./Scaleform.js":10}],9:[function(require,module,exports){
+},{"./Scaleform.js":12}],11:[function(require,module,exports){
 var messageScaleform = require("./Scaleform.js");
 let midsizedMessageScaleform = null;
 let msgInit = 0;
@@ -609,7 +1156,7 @@ mp.events.add("render", () => {
         }
     }
 });
-},{"./Scaleform.js":10}],10:[function(require,module,exports){
+},{"./Scaleform.js":12}],12:[function(require,module,exports){
 class BasicScaleform {
     constructor(scaleformName) {
         this.handle = mp.game.graphics.requestScaleformMovie(scaleformName);
@@ -655,7 +1202,7 @@ class BasicScaleform {
 }
 
 module.exports = BasicScaleform;
-},{}],11:[function(require,module,exports){
+},{}],13:[function(require,module,exports){
 var messageScaleform = require("./Scaleform.js");
 require("./BigMessage.js");
 require("./MidsizedMessage.js");
@@ -667,37 +1214,49 @@ mp.game.ui.messages = {
     showMidsized: (title, message, time = 5000) => mp.events.call("ShowMidsizedMessage", title, message, time),
     showMidsizedShard: (title, message, bgColor, useDarkerShard, condensed, time = 5000) => mp.events.call("ShowMidsizedShardMessage", title, message, bgColor, useDarkerShard, condensed, time)
 };
-},{"./BigMessage.js":8,"./MidsizedMessage.js":9,"./Scaleform.js":10}],12:[function(require,module,exports){
+},{"./BigMessage.js":10,"./MidsizedMessage.js":11,"./Scaleform.js":12}],14:[function(require,module,exports){
 mp.Vector3.prototype.findRot = function(rz, dist, rot) {
     let nVector = new mp.Vector3(this.x, this.y, this.z);
-    var degrees = (rz + rot) * (Math.PI / 180);
+    let degrees = (rz + rot) * (Math.PI / 180);
     nVector.x = this.x + dist * Math.cos(degrees);
     nVector.y = this.y + dist * Math.sin(degrees);
     return nVector;
 }
 mp.Vector3.prototype.rotPoint = function(pos) {
-    var temp = new mp.Vector3(this.x, this.y, this.z);
-    var temp1 = new mp.Vector3(pos.x, pos.y, pos.z);
-    var gegenkathete = temp1.z - temp.z
-    var a = temp.x - temp1.x;
-    var b = temp.y - temp1.y;
-    var ankathete = Math.sqrt(a * a + b * b);
-    var winkel = Math.atan2(gegenkathete, ankathete) * 180 / Math.PI
+    let temp = new mp.Vector3(this.x, this.y, this.z);
+    let temp1 = new mp.Vector3(pos.x, pos.y, pos.z);
+    let gegenkathete = temp1.z - temp.z
+    let a = temp.x - temp1.x;
+    let b = temp.y - temp1.y;
+    let ankathete = Math.sqrt(a * a + b * b);
+    let winkel = Math.atan2(gegenkathete, ankathete) * 180 / Math.PI
     return winkel;
 }
-/*mp.Vector3.prototype.normalize = function(n) {
+mp.Vector3.prototype.toPixels = function() {
+    let clientScreen = mp.game.graphics.getScreenActiveResolution(0, 0);
+    let toScreen = mp.game.graphics.world3dToScreen2d(new mp.Vector3(pos.x, pos.y, pos.z)) || {
+        x: 0,
+        y: 0
+    };
+    return {
+        x: Math.floor(clientScreen.x * toScreen.x) + "px",
+        y: Math.floor(clientScreen.y * toScreen.y) + "px"
+    };
+}
+
+mp.Vector3.prototype.lerp = function(vector2, deltaTime) {
     let nVector = new mp.Vector3(this.x, this.y, this.z);
-    nVector.x = this.x / n;
-    nVector.y = this.y / n;
-    nVector.z = this.z / n;
-    return this;
-}*/
+    nVector.x = this.x + (vector2.x - this.x) * deltaTime
+    nVector.y = this.y + (vector2.y - this.y) * deltaTime
+    nVector.z = this.z + (vector2.z - this.z) * deltaTime
+    return nVector;
+}
 mp.Vector3.prototype.multiply = function(n) {
     let nVector = new mp.Vector3(this.x, this.y, this.z);
     nVector.x = this.x * n;
     nVector.y = this.y * n;
     nVector.z = this.z * n;
-    return this;
+    return nVector;
 }
 mp.Vector3.prototype.dist = function(to) {
     let a = this.x - to.x;
@@ -740,16 +1299,45 @@ mp.Vector3.prototype.length = function() {
 mp.Vector3.prototype.angle = function(to) {
     return Math.acos(this.normalize().dot(to.normalize()));
 }
+mp.Vector3.prototype.ground = function() {
+    let nVector = new mp.Vector3(this.x, this.y, this.z);
+    let z = mp.game.gameplay.getGroundZFor3dCoord(nVector.x, nVector.y, nVector.z, 0, false)
+    let z1 = mp.game.gameplay.getGroundZFor3dCoord(nVector.x + 0.01, nVector.y + 0.01, nVector.z, 0, false)
+    let z2 = mp.game.gameplay.getGroundZFor3dCoord(nVector.x - 0.01, nVector.y - 0.01, nVector.z, 0, false)
+    nVector.z = z;
+    if ((z + 0.1 < z1) || (z + 0.1 < z2)) {
+        if (z1 < z2) {
+            nVector.z = z2;
+        } else {
+            nVector.z = z1;
+        }
+    }
+    return nVector;
+}
+mp.Vector3.prototype.ground2 = function(ignore) {
+    let nVector = new mp.Vector3(this.x, this.y, this.z);
+    let r = mp.raycasting.testPointToPoint(nVector.add(0, 0, 1), nVector.sub(0, 0, 100), ignore.handle, (1 | 16));
+    if ((r) && (r.position)) {
+        nVector = mp.vector(r.position);
+    }
+    return nVector;
+}
+mp.Vector3.prototype.sub = function(x, y, z) {
+    return new mp.Vector3(this.x - x, this.y - y, this.z - z);
+};
+mp.Vector3.prototype.add = function(x, y, z) {
+    return new mp.Vector3(this.x + x, this.y + y, this.z + z);
+};
 mp.Vector3.prototype.insidePolygon = function(polygon) {
-    var x = this.x,
+    let x = this.x,
         y = this.y;
-    var inside = false;
-    for (var i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
-        var xi = polygon[i][0],
+    let inside = false;
+    for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+        let xi = polygon[i][0],
             yi = polygon[i][1];
-        var xj = polygon[j][0],
+        let xj = polygon[j][0],
             yj = polygon[j][1];
-        var intersect = ((yi > y) != (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+        let intersect = ((yi > y) != (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
         if (intersect) inside = !inside;
     }
     return inside;
@@ -757,8 +1345,20 @@ mp.Vector3.prototype.insidePolygon = function(polygon) {
 mp.vector = function(vec) {
     return new mp.Vector3(vec.x, vec.y, vec.z);
 }
-
+Array.prototype.shuffle = function() {
+    let i = this.length;
+    while (i) {
+        let j = Math.floor(Math.random() * i);
+        let t = this[--i];
+        this[i] = this[j];
+        this[j] = t;
+    }
+    return this;
+}
 mp.isValid = function(val) {
     return val != null && val != undefined && val != "";
 }
-},{}]},{},[3]);
+mp.lerp = function(a, b, n) {
+    return (1 - n) * a + n * b;
+}
+},{}]},{},[4]);

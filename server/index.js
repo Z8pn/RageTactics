@@ -8,7 +8,7 @@ var players = [];
 mp.events.add("ServerAccount:Ready", function(player) {
     player.setVariable("loggedIn", false);
     players[player.id] = new PlayerClass(player);
-    player.class = players[player.id]
+    player.interface = players[player.id]
     player.call("Server:RequestLogin");
     player.position.x = 9000;
     player.position.y = 9000;

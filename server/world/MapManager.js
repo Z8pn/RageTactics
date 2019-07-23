@@ -37,6 +37,7 @@ var MapManager = class {
 				max_players: map.max_players || 10,
 				spawns: map.spawns || [],
 				objects: map.objects || [],
+				weapons: map.weapons || [],
 				previewCam: map.previewCam || {},
 				teams: map.teams || [{
 					name: "Team 1",
@@ -66,6 +67,7 @@ var MapManager = class {
 				teams: temp_map.teams,
 				name: temp_map.name,
 				image: temp_map.image,
+				weapons: temp_map.weapons,
 				previewCam: temp_map.previewCam,
 				max_players: temp_map.max_players
 			}

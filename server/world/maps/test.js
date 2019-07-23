@@ -22,9 +22,9 @@ module.exports = {
 	max_players: 16,
 	image: "https://cdn.discordapp.com/attachments/597607496357642250/601864455269384239/Grand_Theft_Auto_V_Screenshot_2019.07.19_-_21.45.51.19.png",
 	weapons:[
-		{weapon:"weapon_pistol_mk2",ammo:100},
-		{weapon:"weapon_pumpshotgun_mk2",ammo:10},
-		{weapon:"weapon_carbinerifle_mk2",ammo:300}
+		{hash:mp.joaat("weapon_pistol_mk2"),ammo:100},
+		{hash:mp.joaat("weapon_pumpshotgun_mk2"),ammo:10},
+		{hash:mp.joaat("weapon_carbinerifle_mk2"),ammo:300}
 	],
 	teams: [{
 		name: "Team Yakuza",
@@ -50,7 +50,7 @@ module.exports = {
 		max:8
 	}],
 	previewCam:{
-		x:-2290.640 ,y:393.335 , z:194.601,
-		py:-2290.640 ,py:373.335 , pz:174.601
+		x:-2063.26416015625, y:316.16082763671875, z:452.0326843261719,
+		px:-2184.11865234375, py:291.03887939453125, pz:280.1921081542969
 	}
 }
