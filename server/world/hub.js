@@ -20,7 +20,7 @@ var HUB = new class {
 		player.call("HUB:LoadData", [JSON.stringify(this._safezones), JSON.stringify(this._allowedWeapons), JSON.stringify(this._allowedVehicles)]);
 		setTimeout(function() {
 			player.call("GP:StartGame");
-			player._players.push(player);
+			self._players.push(player);
 		}, 5000)
 	}
 	addSafeZone(x, y, z, tx, ty, tz) {
