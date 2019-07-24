@@ -1,5 +1,5 @@
 /*var ArmourData = []; test test2
-setInterval(function() {
+setInterval(function() { dasdasf
     mp.players.forEachInStreamRange(player => {
         if (!ArmourData[player]) {
             ArmourData[player] = 0;
