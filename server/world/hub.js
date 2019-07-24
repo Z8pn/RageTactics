@@ -15,8 +15,11 @@ var HUB = new class {
 		player.setVariable("current_status", "hub");
 		player.call("Lobby:Hide");
 		player.interface.spawn(this._spawn.x, this._spawn.y, this._spawn.z, 0, [], 0);
-		player.call("GP:StartGame");
+		player.call("HUB:PlayerCam");
 		player.call("HUB:LoadData", [JSON.stringify(this._safezones), JSON.stringify(this._allowedWeapons), JSON.stringify(this._allowedVehicles)]);
+		setTimeout(function() {
+			player.call("GP:StartGame");
+		}, 5000)
 	}
 	addSafeZone(x, y, z, tx, ty, tz) {
 		this._safezones.push({
