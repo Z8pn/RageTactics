@@ -1,4 +1,5 @@
 var MapManager = require("../world/MapManager.js")
+var HUB = require("../world/hub.js")
 var e = require('../libs/enums.js');
 var NumberManager = new class {
     constructor() {
@@ -39,9 +40,10 @@ var NumberManager = new class {
         this._useddims[dim] = true;
     }
 }
-var Lobby = class {
+var TeamElimination = class {
     constructor() {
         let self = this;
+        self.mode = "Team Elimination";
         self._host = undefined;
         self._name = "";
         self._image = "";
@@ -56,12 +58,14 @@ var Lobby = class {
         self._dim = NumberManager.gen_dim();
         self._status = e.LOBBY_CREATING;
         self._id = NumberManager.gen_id(5);
+        self._score = [];
         self._objects = [];
         self._spawnpoints = [];
         self._round = 1;
         self._MaxRounds = 1;
-        self._roundDuration = 5 * 60; // 5 Minutes;
-        self._orgLobbyCooldown = 5;
+        self._orgRoundDuration = 5 * 60;
+        self._roundDuration = self._orgRoundDuration; // 5 Minutes;
+        self._orgLobbyCooldown = 30;
         self._lobbyWaitCooldown = self._orgLobbyCooldown;
         self._previewCam = {
             x: 0,
@@ -74,6 +78,10 @@ var Lobby = class {
         self._tick = setInterval(function() {
             self.tick();
         }, 1000)
+        self._roundCooldown = 15;
+    }
+    clear() {
+        clearInterval(this._tick);
     }
     set host(player) {
         this._host = player;
@@ -97,15 +105,36 @@ var Lobby = class {
         return this._teamsDead;
     }
     reset() {
+        let self = this;
         this._lobbyWaitCooldown = this._orgLobbyCooldown;
         this.status = e.LOBBY_CREATING;
         this._teamsDead = [];
+        this._round = 1;
         if (this._cLoaded) {
             clearInterval(this._cLoaded);
         }
         this.players.forEach(function(player) {
-            LobbyManager.leaveLobby(player.client);
+            LobbyManager.leaveLobby(player.client, self.id);
         })
+    }
+    get score() {
+        return this._score;
+    }
+    addPointToTeam(team) {
+        if (!this._score[team]) this._score[team] = 0;
+        this._score[team] += 1;
+    }
+    get winner() {
+        let self = this;
+        let winner = undefined;
+        let hScore = 0;
+        this.teams.forEach(function(e, i) {
+            if (self.score[i] > hScore) {
+                hScore = self.score[i];
+                winner = e;
+            }
+        });
+        return winner;
     }
     get round() {
         return this._round;
@@ -187,16 +216,26 @@ var Lobby = class {
             self._idleTick += 1;
             if (self._idleTick > 120) LobbyManager.clear(self.id);
         }
-        if (self.players.length > 0) {
-            if (self.status == e.LOBBY_CREATING) {
-                console.log("LOBBY WAITING");
-                self.status = e.LOBBY_WAITING;
-            } else if (self.status == e.LOBBY_WAITING) {
+        if (self.status == e.LOBBY_CREATING) {
+            console.log("LOBBY WAITING");
+            self.status = e.LOBBY_WAITING;
+        } else if (self.status == e.LOBBY_WAITING) {
+            if (!(self.players.length % self.teams.length)) {
                 self._lobbyWaitCooldown -= 1;
                 if (self._lobbyWaitCooldown < 1) {
                     console.log("LOBBY_STARTING");
                     self.status = e.LOBBY_STARTING;
+                    self._lobbyWaitCooldown = self._orgLobbyCooldown;
                 }
+            }
+        }
+        if (self.status == e.LOBBY_NEW_ROUND_STARTING) {
+            self._roundCooldown -= 1;
+            if (self._roundCooldown < 1) {
+                console.log("LOBBY_NEW_ROUND STARTING");
+                self._roundCooldown = 15;
+                self.status = e.LOBBY_STARTING;
+                self._round += 1;
             }
         }
     }
@@ -224,27 +263,35 @@ var Lobby = class {
         if (self.status == e.LOBBY_RUNNING) {
             self.round_duration -= 1;
             if (self.round_duration <= 0) {
+                self.round_duration = self._orgRoundDuration;
                 self.end();
             }
-            let dead_teams = Object.keys(this._teamsDead).map(e => {
-                return this._teamsDead[e];
+            let team_names = this.teams.map(e => {
+                return e.name;
+            });
+            let team = this.players.map(e => {
+                return {
+                    team: team_names[e.team],
+                    name: e.client.name,
+                    dead: e.client.interface.isDead(),
+                    ping: e.client.ping,
+                    kills: e.kills,
+                    deaths: e.deaths,
+                    assists: e.assists
+                };
             })
-            console.log("dead_teams",dead_teams);
-
+            console.log("total team", team);
             self.players.forEach(function(player) {
-                player.client.call("GP:RoundInfo", [self.round_duration,JSON.stringify(dead_teams)]);
+                player.client.call("GP:RoundInfo", [self.round_duration, JSON.stringify(team)]);
             });
         }
         if (self.players.length > 0) {
             self.players.forEach(function(player) {
                 if (player.ready == 0) {
                     player.ready = 1;
-                    if (player.client.interface.getState == "waitingLobby") {
-                        player.client.interface.updateState("readyLobby");
-                        player.client.setVariable("current_status", "cam");
-                        console.log(JSON.stringify(self._previewCam));
-                        player.client.call("GP:LobbyCam", [JSON.stringify(self._previewCam)]);
-                    }
+                    player.client.setVariable("current_status", "cam");
+                    console.log(JSON.stringify(self._previewCam));
+                    player.client.call("GP:LobbyCam", [JSON.stringify(self._previewCam)]);
                 } else {
                     player.client.call("GP:Ping");
                 }
@@ -252,44 +299,72 @@ var Lobby = class {
                     player.client.call("GP:LobbyUpdate", [JSON.stringify(tPlayerNames), self._lobbyWaitCooldown]);
                 }
             })
-            if (self.status == e.LOBBY_STARTING) {
+            if (self.status == e.LOBBY_NEW_ROUND) {
+                self._teamsDead = [];
+                self.players.forEach(function(player) {
+                    if (player.ready == 1) {
+                        player.ready = 0;
+                    }
+                });
+                console.log(" new round ")
+                self.status = e.LOBBY_NEW_ROUND_STARTING;
+            } else if (self.status == e.LOBBY_CLOSING) {
+                if (!self._closingTime) self._closingTime = 15;
+                if (self._closingTime == 15) {
+                    console.log("winner", self.winner);
+                    self.players.forEach(function(player) {
+                        if (player.ready == 1) {
+                            player.client.setVariable("current_status", "cam");
+                            console.log(JSON.stringify(self._previewCam));
+                            player.client.call("GP:LobbyCam", [JSON.stringify(self._previewCam)]);
+                        }
+                    });
+                }
+                self._closingTime -= 1;
+                console.log(self._closingTime);
+                if (self._closingTime == 0) {
+                    self._closingTime = undefined;
+                    console.log("LOBBY_ENDING");
+                    self.status = e.LOBBY_CLOSED;
+                    LobbyManager.deleteLobby(self.id);
+                }
+            } else if (self.status == e.LOBBY_STARTING) {
                 self.prepare();
                 console.log("prepare()");
-            }
-            if (self.status == e.LOBBY_COUNTDOWN) {
+            } else if (self.status == e.LOBBY_COUNTDOWN) {
                 self.players.forEach(function(player) {
-                    player.client.call("GP:ScaleForm", ["Starting..."]);
+                    player.client.call("GP:ScaleForm", ["Starting...", self.round]);
                 });
                 self.status = e.LOBBY_COUNTDOWN_5;
             } else if (self.status == e.LOBBY_COUNTDOWN_5) {
                 self.players.forEach(function(player) {
-                    player.client.call("GP:ScaleForm", ["5"]);
+                    player.client.call("GP:ScaleForm", ["5", self.round]);
                 });
                 self.status = e.LOBBY_COUNTDOWN_4;
             } else if (self.status == e.LOBBY_COUNTDOWN_4) {
                 self.players.forEach(function(player) {
-                    player.client.call("GP:ScaleForm", ["4"]);
+                    player.client.call("GP:ScaleForm", ["4", self.round]);
                 });
                 self.status = e.LOBBY_COUNTDOWN_3;
             } else if (self.status == e.LOBBY_COUNTDOWN_3) {
                 self.players.forEach(function(player) {
-                    player.client.call("GP:ScaleForm", ["3"]);
+                    player.client.call("GP:ScaleForm", ["3", self.round]);
                 });
                 self.status = e.LOBBY_COUNTDOWN_2;
             } else if (self.status == e.LOBBY_COUNTDOWN_2) {
                 self.players.forEach(function(player) {
-                    player.client.call("GP:ScaleForm", ["2"]);
+                    player.client.call("GP:ScaleForm", ["2", self.round]);
                 });
                 self.status = e.LOBBY_COUNTDOWN_1;
             } else if (self.status == e.LOBBY_COUNTDOWN_1) {
                 self.players.forEach(function(player) {
-                    player.client.call("GP:ScaleForm", ["1"]);
+                    player.client.call("GP:ScaleForm", ["1", self.round]);
                 });
                 self.status = e.LOBBY_COUNTDOWN_GO;
             } else if (self.status == e.LOBBY_COUNTDOWN_GO) {
                 self.status = e.LOBBY_RUNNING;
                 self.players.forEach(function(player) {
-                    player.client.call("GP:ScaleForm", ["Go!"]);
+                    player.client.call("GP:ScaleForm", ["Go!", self.round]);
                 });
                 self.start();
             }
@@ -353,39 +428,92 @@ var Lobby = class {
             }, 5000);
         }
     }
-    end() {
-        this.status = e.LOBBY_ENDING;
+    roundreport() {
+        console.log("TODO REPORT ROUND");
+    }
+    isOver() {
+        let self = this;
+        let rounds = this.MaxRound;
+        let winner = undefined;
+        let hScore = 0;
+        this.teams.forEach(function(e, i) {
+            if (self.score[i] > hScore) {
+                hScore = self.score[i];
+                winner = e;
+            }
+        });
+        if (hScore > rounds / 2) {
+            console.log("not winnable");
+            return true;
+        } else {
+            console.log("still winnable")
+            return false;
+        }
+    }
+    end(losingTeam) {
         console.log("round enderino");
+        //calc game score
+        /* let losingTeamArr = this.teams.find(function(e, i) {
+             return losingTeam == i;
+         });*/
+        if (losingTeam) {
+            this.addPointToTeam(losingTeam);
+        } else if (losingTeam == undefined) {}
+        console.log(this.score);
+        //calc game score
+        this.roundreport();
+        let isGameOver = this.isOver();
+        console.log("isGameOver", isGameOver);
+        if (((this.MaxRound - this.round) > 1) && (isGameOver == false)) {
+            this.status = e.LOBBY_NEW_ROUND;
+        } else {
+            this.status = e.LOBBY_CLOSING;
+        }
     }
     killed(victim, killer) {
         let self = this;
-        let pos = victim.position;
-        let model = victim.model;
-        let heading = victim.heading;
-        victim = this.players.find(function(player) {
-            return player.client == victim;
-        });
-        console.log("victim", victim);
-        killer = this.players.find(function(player) {
-            return player.client == killer;
-        });
-        console.log("killer", killer);
-        let victim_team = this.teams.find(function(e, i) {
-            return victim.team == i;
-        });
-        console.log("KILLED VICTIM KILLER");
-        console.log("team", victim_team);
-        let clothes = JSON.stringify(victim_team.clothing);
-        this.players.forEach(function(player) {
-            player.client.call("GP:DummyBody", [pos.x, pos.y, pos.z, model, heading, clothes]);
-        });
-        if (!this._teamsDead[victim_team]) {
-            this._teamsDead[victim_team] = [];
-        }
-        this._teamsDead[victim_team].push(victim);
-        if (this._teamsDead[victim_team].length >= victim_team.players) {
-            console.log(victim_team.name, "team 0 survivors");
-            self.end();
+        if (self.status == e.LOBBY_RUNNING) {
+            let pos = victim.position;
+            let model = victim.model;
+            let heading = victim.heading;
+            let victim_ref = victim;
+            let killer_ref = killer;
+            victim = this.players.find(function(player) {
+                return player.client == victim_ref;
+            });
+            console.log("victim", victim);
+            killer = this.players.find(function(player) {
+                return player.client == killer_ref;
+            });
+            killer.kills += 1;
+            victim.deaths += 1;
+            let assist_player = victim_ref.interface.assist(killer_ref);
+            if (assist_player) {
+                let a_player = this.players.find(function(player) {
+                    return player.client.id == assist_player;
+                });
+                if (a_player) {
+                    a_player.assists += 1;
+                }
+            }
+            console.log("killer", killer);
+            let victim_team = this.teams.find(function(e, i) {
+                return victim.team == i;
+            });
+            console.log("KILLED VICTIM KILLER");
+            console.log("team", victim_team);
+            let clothes = JSON.stringify(victim_team.clothing);
+            this.players.forEach(function(player) {
+                player.client.call("GP:DummyBody", [pos.x, pos.y, pos.z, model, heading, clothes]);
+            });
+            if (!this._teamsDead[victim_team]) {
+                this._teamsDead[victim_team] = [];
+            }
+            this._teamsDead[victim_team].push(victim);
+            if (this._teamsDead[victim_team].length >= victim_team.players) {
+                console.log(victim_team.name, "team 0 survivors");
+                self.end(victim.team);
+            }
         }
     }
     getPlayer(player) {
@@ -396,6 +524,20 @@ var Lobby = class {
             return p;
         } else {
             return e.LOBBY_PLAYER_NOT_FOUND
+        }
+    }
+    leave(player) {
+        let self = this;
+        let pIndex = this.players.findIndex(function(e, i) {
+            return (e.client == player);
+        });
+        if (pIndex > -1) {
+            player.interface.lobby = -1;
+            console.log("pIndex", pIndex)
+            this.players.splice(pIndex, 1);
+            return e.LOBBY_LEAVE_SUCCESS;
+        } else {
+            return e.LOBBY_LEAVE_FAIL;
         }
     }
     join(player, team) {
@@ -429,17 +571,19 @@ var Lobby = class {
         }
     }
 }
-let TestLobby1 = new Lobby();
+let TestLobby1 = new TeamElimination();
 setTimeout(function() {
     TestLobby1.name = "TestLobby1";
     TestLobby1.map = "testMap";
+    TestLobby1.MaxRounds = 5;
 }, 1000)
-let TestLobby2 = new Lobby();
+let TestLobby2 = new TeamElimination();
 setTimeout(function() {
     TestLobby2.name = "TestLobby2";
     TestLobby2.map = "testMap";
+    TestLobby2.MaxRounds = 3;
 }, 1000)
-let TestLobby3 = new Lobby();
+let TestLobby3 = new TeamElimination();
 setTimeout(function() {
     TestLobby3.name = "TestLobby3";
     TestLobby3.map = "testMap";
@@ -468,7 +612,8 @@ var LobbyManager = new class {
                 map: e.map,
                 status: e.status,
                 teams: e.teams,
-                rounds: e.rounds
+                rounds: e.MaxRound,
+                mode: e.mode
             }
         })
     }
@@ -477,34 +622,65 @@ var LobbyManager = new class {
         return;
     }
     createLobby(map) {}
-    deleteLobby(id) {}
-    leaveLobby(player) {}
-    joinLobby(player, id, teamIndex) {
+    deleteLobby(id) {
+        let self = this;
+        console.log("TODO DELETE LOBBY", id);
+        let lobby = this.getLobbyByID(id);
+        if (lobby) {
+            let index = this._lobbies.findIndex(e => {
+                return e.id == id;
+            });
+            console.log("index", index);
+            lobby.reset();
+            setTimeout(() => {
+                self._lobbies[index] = undefined;
+                delete self._lobbies[index];
+                self._lobbies.splice(index, 1);
+            }, 1000);
+        }
+    }
+    leaveLobby(player, id) {
         if (player.interface) {
-            console.log("joinLobby");
+            console.log("leaveLobby");
             let lobby = this.getLobbyByID(id);
             if (lobby) {
                 console.log("Lobby exists");
-                let lobbyRequest = lobby.join(player, teamIndex);
-                if (lobbyRequest == e.LOBBY_JOIN_SUCCESS) {
-                    console.log("join success", e.LOBBY_JOIN_SUCCESS);
-                    player.interface.updateState("waitingLobby");
-                    player.call("Lobby:Hide");
+                let lobbyRequest = lobby.leave(player);
+                console.log("lobbyRequest", lobbyRequest)
+                if (lobbyRequest == e.LOBBY_LEAVE_SUCCESS) {
+                    console.log("leave succesful")
+                    HUB.join(player);
+                }
+            }
+        }
+    }
+    joinLobby(player, id, teamIndex) {
+        if (player.interface) {
+            console.log("joinLobby", player.interface.lobby);
+            if (player.interface.lobby == -1) {
+                let lobby = this.getLobbyByID(id);
+                if (lobby) {
+                    console.log("Lobby exists");
+                    let lobbyRequest = lobby.join(player, teamIndex);
+                    if (lobbyRequest == e.LOBBY_JOIN_SUCCESS) {
+                        console.log("join success", e.LOBBY_JOIN_SUCCESS);
+                        player.call("Lobby:Hide");
+                    } else {
+                        player.call("Lobby:Error", [JSON.stringify({
+                            title: "Error",
+                            message: "translate:" + lobbyRequest,
+                            timeout: 5000,
+                            color: "red"
+                        })]);
+                    }
                 } else {
                     player.call("Lobby:Error", [JSON.stringify({
                         title: "Error",
-                        message: "translate:" + lobbyRequest,
+                        message: "translate:" + e.LOBBY_NOT_EXISTS,
                         timeout: 5000,
                         color: "red"
                     })]);
                 }
-            } else {
-                player.call("Lobby:Error", [JSON.stringify({
-                    title: "Error",
-                    message: "translate:" + e.LOBBY_NOT_EXISTS,
-                    timeout: 5000,
-                    color: "red"
-                })]);
             }
         }
     }
@@ -577,7 +753,7 @@ mp.events.add("LobbyManager:LoadingFinished", function(player, lID) {
 });
 mp.events.add("LobbyManager:Join", function(player, id, teamIndex) {
     if (player.interface) {
-        if (player.interface.getState == "lobby") {
+        if (player.interface.lobby == -1) {
             console.log("join lobby");
             LobbyManager.joinLobby(player, id, teamIndex);
         }

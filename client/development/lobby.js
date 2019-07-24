@@ -60,61 +60,60 @@ mp.events.add("Lobby:LoadObjects", (id, objects) => {
     //LobbyManager:Join
 });
 mp.events.add("GP:StartCam", () => {
-    if (mp.gpGameStarted == false) {
-        mp.gpGameStarted = true;
-        CEFBrowser.call("cef_hidewaitingLobby");
-        let cur_z = mp.defaultCam.getCoord().z;
-        let camera2 = mp.cameras.new('default', new mp.Vector3(mp.players.local.position.x, mp.players.local.position.y, cur_z), new mp.Vector3(), 60);
-        camera2.pointAtCoord(mp.players.local.position.x, mp.players.local.position.y, mp.players.local.position.z);
-        camera2.setActiveWithInterp(mp.defaultCam.handle, 500, 1, 1);
-        mp.defaultCam = camera2;
+    //if (mp.gpGameStarted == false) {
+    mp.gpGameStarted = true;
+    CEFBrowser.call("cef_hidewaitingLobby");
+    let cur_z = mp.defaultCam.getCoord().z;
+    let camera2 = mp.cameras.new('default', new mp.Vector3(mp.players.local.position.x, mp.players.local.position.y, cur_z), new mp.Vector3(), 60);
+    camera2.pointAtCoord(mp.players.local.position.x, mp.players.local.position.y, mp.players.local.position.z);
+    camera2.setActiveWithInterp(mp.defaultCam.handle, 500, 1, 1);
+    mp.defaultCam = camera2;
+    setTimeout(function() {
+        let camera4 = mp.cameras.new('default', new mp.Vector3(mp.players.local.position.x, mp.players.local.position.y, mp.players.local.position.z + 0.5), new mp.Vector3(), 70);
+        camera4.pointAtCoord(mp.players.local.position.x, mp.players.local.position.y, mp.players.local.position.z);
+        camera4.setActive(true);
+        mp.game.cam.renderScriptCams(true, false, 0, true, false);
+        mp.game.cam.doScreenFadeOut(3500);
+        camera4.setActiveWithInterp(mp.defaultCam.handle, 3500, 1, 1);
+        mp.defaultCam = camera4;
         setTimeout(function() {
-            let camera4 = mp.cameras.new('default', new mp.Vector3(mp.players.local.position.x, mp.players.local.position.y, mp.players.local.position.z + 0.5), new mp.Vector3(), 70);
-            camera4.pointAtCoord(mp.players.local.position.x, mp.players.local.position.y, mp.players.local.position.z);
-            camera4.setActive(true);
-            mp.game.cam.renderScriptCams(true, false, 0, true, false);
-            mp.game.cam.doScreenFadeOut(3500);
-            camera4.setActiveWithInterp(mp.defaultCam.handle, 3500, 1, 1);
-            mp.defaultCam = camera4;
+            mp.game.cam.renderScriptCams(false, false, 0, true, false);
             setTimeout(function() {
-                mp.game.cam.renderScriptCams(false, false, 0, true, false);
-                setTimeout(function() {
-                    mp.game.cam.doScreenFadeIn(500);
-                }, 200)
-            }, 3500);
-        }, 1000);
-    }
+                mp.game.cam.doScreenFadeIn(500);
+            }, 200)
+        }, 3500);
+    }, 1000);
+    // }
 });
-mp.events.add("GP:ScaleForm", (s) => {
+mp.events.add("GP:ScaleForm", (time, round) => {
     if (mp.gpGameStarted == true) {
-        mp.game.ui.messages.showShard(s, "", 1, 0, 2000);
+        mp.game.ui.messages.showShard(time, "Round " + round, 1, 0, 2000);
     }
 });
 mp.events.add("GP:LobbyCam", (lobbyCam) => {
-    if (mp.gpGameStarted == false) {
-        console.log("GP:LobbyCam", JSON.stringify(lobbyCam));
-        mp.players.local.freezePosition(true);
-        lobbyCam = JSON.parse(lobbyCam);
-        // game_start
-        let camera2 = mp.cameras.new('default', new mp.Vector3(mp.players.local.position.x, mp.players.local.position.y, mp.players.local.position.z + 2), new mp.Vector3(), 60);
-        camera2.pointAtCoord(mp.players.local.position.x, mp.players.local.position.y, mp.players.local.position.z);
-        camera2.setActive(true);
-        mp.defaultCam = camera2;
-        mp.game.cam.renderScriptCams(true, false, 0, true, false);
-        //
+    console.log("GP:LobbyCam", JSON.stringify(lobbyCam));
+    lobbyCam = JSON.parse(lobbyCam);
+    mp.players.local.freezePosition(true);
+    // game_start
+    let camera2 = mp.cameras.new('default', new mp.Vector3(mp.players.local.position.x, mp.players.local.position.y, mp.players.local.position.z + 2), new mp.Vector3(), 60);
+    camera2.pointAtCoord(mp.players.local.position.x, mp.players.local.position.y, mp.players.local.position.z);
+    camera2.setActive(true);
+    mp.defaultCam = camera2;
+    mp.game.cam.renderScriptCams(true, false, 0, true, false);
+    //
+    setTimeout(function() {
+        let camera3 = mp.cameras.new('default', new mp.Vector3(mp.players.local.position.x, mp.players.local.position.y, mp.players.local.position.z + 300), new mp.Vector3(), 60);
+        camera3.pointAtCoord(mp.players.local.position.x, mp.players.local.position.y, mp.players.local.position.z);
+        camera3.setActiveWithInterp(mp.defaultCam.handle, 1000, 1, 1);
+        mp.defaultCam = camera3;
         setTimeout(function() {
-            let camera3 = mp.cameras.new('default', new mp.Vector3(mp.players.local.position.x, mp.players.local.position.y, mp.players.local.position.z + 300), new mp.Vector3(), 60);
-            camera3.pointAtCoord(mp.players.local.position.x, mp.players.local.position.y, mp.players.local.position.z);
-            camera3.setActiveWithInterp(mp.defaultCam.handle, 1000, 1, 1);
-            mp.defaultCam = camera3;
-            setTimeout(function() {
-                let camera4 = mp.cameras.new('default', new mp.Vector3(lobbyCam.x, lobbyCam.y, lobbyCam.z), new mp.Vector3(), 60);
-                camera4.pointAtCoord(lobbyCam.px, lobbyCam.py, lobbyCam.pz);
-                camera4.setActiveWithInterp(mp.defaultCam.handle, 5000, 1, 1);
-                mp.defaultCam = camera4;
-            }, 1100)
-        }, 100)
-    }
+            mp.players.local.position = new mp.Vector3(lobbyCam.x, lobbyCam.y, lobbyCam.z + 15);
+            let camera4 = mp.cameras.new('default', new mp.Vector3(lobbyCam.x, lobbyCam.y, lobbyCam.z), new mp.Vector3(), 60);
+            camera4.pointAtCoord(lobbyCam.px, lobbyCam.py, lobbyCam.pz);
+            camera4.setActiveWithInterp(mp.defaultCam.handle, 5000, 1, 1);
+            mp.defaultCam = camera4;
+        }, 1100)
+    }, 100)
 });
 mp.events.add("GP:LobbyUpdate", (lobbyData, timeTillStart) => {
     if (mp.gpGameStarted == false) {
@@ -124,7 +123,7 @@ mp.events.add("GP:LobbyUpdate", (lobbyData, timeTillStart) => {
 });
 var temp_bodies = [];
 mp.events.add("GP:StartGame", () => {
-    mp.game.cam.renderScriptCams(false, false, 0, true, false);
+    //mp.game.cam.renderScriptCams(false, false, 0, true, false);
     mp.game.player.setTargetingMode(1);
     mp.game.player.setLockon(false);
     mp.game.player.setLockonRangeOverride(0.0);
@@ -153,22 +152,21 @@ mp.events.add('render', (nametags) => {
             cPed.setInvincible(false);
             cPed.setCanBeDamaged(true);
             cPed.setOnlyDamagedByPlayer(false);
-            cPed.setToRagdoll(5000, 50000, 0, false, false, false)
+            cPed.setToRagdoll(1, 1, 0, false, false, false)
         }
     })
 });
 mp.events.add("GP:DummyBody", (x, y, z, model, heading, clothing) => {
     clothing = JSON.parse(clothing);
     let cur = new mp.Vector3(x, y, z);
-    let Ped = mp.peds.new(model, cur, heading- 90, mp.players.local.dimension);
+    let Ped = mp.peds.new(model, cur, heading + 90, mp.players.local.dimension);
     Ped.IsDummy = true;
     Ped.freezePosition(false);
     Ped.setNoCollision(mp.players.local.handle, false);
     Ped.setCanRagdoll(true);
-    Ped.setToRagdoll(5000, 50000, 0, false, false, false)
+    Ped.setToRagdoll(1, 1, 0, false, false, false)
     let n_cur = cur.findRot(0, 2, heading - 90);
-    Ped.setVelocity((cur.x - n_cur.x), (cur.y - n_cur.y) , (cur.z - n_cur.z) );
-    //console.log(x, y, z, model, clothing);
+    Ped.setVelocity((cur.x - n_cur.x), (cur.y - n_cur.y), (cur.z - n_cur.z));
     clothing.forEach(function(part) {
         Ped.setComponentVariation(part.componentNumber, part.drawable, part.texture, part.palette);
     })
