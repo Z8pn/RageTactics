@@ -14,6 +14,7 @@ var HUB = new class {
 	join(player) {
 		player.setVariable("current_status", "hub");
 		player.call("Lobby:Hide");
+		this._players.push(player);
 		player.interface.spawn(this._spawn.x, this._spawn.y, this._spawn.z, 0, [], 0);
 		player.call("HUB:PlayerCam");
 		player.call("HUB:LoadData", [JSON.stringify(this._safezones), JSON.stringify(this._allowedWeapons), JSON.stringify(this._allowedVehicles)]);
@@ -35,7 +36,7 @@ var HUB = new class {
 		player.call("Lobby:Hide");
 	}
 	isInHub(player) {
-		return false;
+		return this._players.indexOf(player) > -1;
 	}
 }
 module.exports = HUB;

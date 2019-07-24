@@ -754,8 +754,12 @@ mp.events.add("LobbyManager:LoadingFinished", function(player, lID) {
 mp.events.add("LobbyManager:Join", function(player, id, teamIndex) {
     if (player.interface) {
         if (player.interface.lobby == -1) {
-            console.log("join lobby");
-            LobbyManager.joinLobby(player, id, teamIndex);
+            if (HUB.isInHub(player)) {
+                console.log("join lobby");
+                LobbyManager.joinLobby(player, id, teamIndex);
+            } else {
+                console.log("Player not in Hub");
+            }
         }
     }
 });
