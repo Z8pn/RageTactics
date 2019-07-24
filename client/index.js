@@ -744,10 +744,10 @@ mp.events.add("Lobby:Update", (allMaps, current_lobbies) => {
 });
 mp.events.add("Lobby:Show", (state) => {
     if (state) {
-        mp.game.ui.displayHud(false);
         CEFBrowser.cursor(true);
         CEFBrowser.call("cef_loadlobby")
         mp.game.ui.displayRadar(false);
+        mp.game.ui.displayHud(false);
         mp.game.graphics.transitionToBlurred(1);
     } else {
         mp.game.ui.displayHud(true);
@@ -780,6 +780,8 @@ mp.events.add("Lobby:LoadObjects", (id, objects) => {
 mp.events.add("GP:StartCam", () => {
     //if (mp.gpGameStarted == false) {
     mp.gpGameStarted = true;
+    mp.game.ui.displayRadar(false);
+    mp.game.ui.displayHud(false);
     CEFBrowser.call("cef_hidewaitingLobby");
     let cur_z = mp.defaultCam.getCoord().z;
     let camera2 = mp.cameras.new('default', new mp.Vector3(mp.players.local.position.x, mp.players.local.position.y, cur_z), new mp.Vector3(), 60);
@@ -811,6 +813,8 @@ mp.events.add("GP:ScaleForm", (time, round) => {
 mp.events.add("GP:LobbyCam", (lobbyCam) => {
     mp.gpGameStarted = true;
     console.log("GP:LobbyCam", JSON.stringify(lobbyCam));
+    mp.game.ui.displayRadar(false);
+    mp.game.ui.displayHud(false);
     lobbyCam = JSON.parse(lobbyCam);
     mp.players.local.freezePosition(true);
     // game_start
@@ -842,8 +846,7 @@ mp.events.add("GP:LobbyUpdate", (lobbyData, timeTillStart) => {
 });
 var temp_bodies = [];
 mp.events.add("GP:StartGame", (hub) => {
-    if (!hub) 
-        mp.gpGameStarted = true;
+    if (!hub) mp.gpGameStarted = true;
     //mp.game.cam.renderScriptCams(false, false, 0, true, false);
     mp.game.player.setTargetingMode(1);
     mp.game.player.setLockon(false);
