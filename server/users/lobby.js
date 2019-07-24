@@ -740,7 +740,7 @@ var LobbyManager = new class {
     onClosing: function () {},
     onClosed: function () {}
 }
-
+ 
 */
 mp.events.add("LobbyManager:LoadingFinished", function(player, lID) {
     if (player.interface) {
