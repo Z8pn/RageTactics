@@ -85,10 +85,30 @@ var Player = class {
     isDead() {
         return this._death;
     }
+    assist(killer) {
+        let self = this;
+        let allDamage = self.damage;
+        let damage_does = [];
+        allDamage.forEach(function(e) {
+            if (!damage_does[e.attacker_id]) damage_does[e.attacker_id] = 0;
+            if (typeof e.damage == "number") {
+                damage_does[e.attacker_id] += e.damage;
+            }
+        })
+        damage_does = Object.keys(damage_does).sort((a, b) => {
+            let a_dmg = damage_does[a];
+            let b_dmg = damage_does[b];
+            return a_dmg - b_dmg;
+        })
+        console.log("damage_does", damage_does[0]);
+
+        return damage_does[0];
+    }
     death(attacker, weapon, bodypart) {
         this._death = true;
         this.health = 0;
         this.armor = 0;
+        this.addDamage(attacker.interface.id, weapon, "DEAD", bodypart)
         this._player.removeAllWeapons();
         console.log("health", this.health);
         console.log("armor", this.armor);
