@@ -1,4 +1,4 @@
-/*var ArmourData = []; test test2
+/*var ArmourData = []; test test2 asdf
 setInterval(function() { dasdasf
     mp.players.forEachInStreamRange(player => {
         if (!ArmourData[player]) {
