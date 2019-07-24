@@ -22,8 +22,8 @@ module.exports = {
 	max_players: 16,
 	image: "https://cdn.discordapp.com/attachments/597607496357642250/601864455269384239/Grand_Theft_Auto_V_Screenshot_2019.07.19_-_21.45.51.19.png",
 	weapons:[
-		{hash:mp.joaat("weapon_pistol_mk2"),ammo:100},
-		{hash:mp.joaat("weapon_pumpshotgun_mk2"),ammo:10},
+		{hash:mp.joaat("weapon_pistol_mk2"),ammo:40},
+		{hash:mp.joaat("weapon_pumpshotgun_mk2"),ammo:20},
 		{hash:mp.joaat("weapon_carbinerifle_mk2"),ammo:300}
 	],
 	teams: [{
