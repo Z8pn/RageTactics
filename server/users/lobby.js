@@ -206,7 +206,7 @@ var TeamElimination = class {
         });
         this.players.forEach(function(player) {
             temp_teams[player.team].players += 1;
-        });
+        }); 
         return temp_teams;
     }
     update_status() {
