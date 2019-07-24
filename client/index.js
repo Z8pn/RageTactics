@@ -357,7 +357,6 @@ mp.events.add('playerWeaponShot', (targetPosition, targetEntity) => {
     mp.game.player.setTargetingMode(1);
     mp.game.player.setLockon(false);
     mp.game.player.setLockonRangeOverride(0.0);
-    targetEntity = mp.players.local;
     if (isWallbugging(targetPosition) == false) {
         if (targetEntity) {
             let bone = getIsHitOnBone(targetPosition, targetEntity).bone;
