@@ -345,6 +345,9 @@ mp.events.add("render", () => {
     if ((curHealth == 0) && (mp.players.local.getHealth() != 0)) {
         mp.players.local.setHealth(curHealth);
         console.log("set death");
+        if (mp.players.local.getVariable("death") == false) {
+        	mp.events.callRemote("User:Suicide");
+        }
     }
 });
 mp.events.add("Combat:Hit", (dmg) => {

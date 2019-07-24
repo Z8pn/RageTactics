@@ -206,7 +206,7 @@ var TeamElimination = class {
         });
         this.players.forEach(function(player) {
             temp_teams[player.team].players += 1;
-        }); 
+        });
         return temp_teams;
     }
     update_status() {
@@ -220,7 +220,7 @@ var TeamElimination = class {
             console.log("LOBBY WAITING");
             self.status = e.LOBBY_WAITING;
         } else if (self.status == e.LOBBY_WAITING) {
-            if (/*!(self.players.length % self.teams.length) && */(self.players.length > 0)) {
+            if (!(self.players.length % self.teams.length) && (self.players.length > 0)) {
                 self._lobbyWaitCooldown -= 1;
                 if (self._lobbyWaitCooldown < 1) {
                     console.log("LOBBY_STARTING");

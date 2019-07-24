@@ -101,10 +101,12 @@ var Player = class {
             return a_dmg - b_dmg;
         })
         console.log("damage_does", damage_does[0]);
-
         return damage_does[0];
     }
     death(attacker, weapon, bodypart) {
+        if (!attacker) attacker = this._player;
+        if (!weapon) weapon = "none";
+        if (!bodypart) bodypart = "none";
         this._death = true;
         this.health = 0;
         this.armor = 0;
@@ -310,6 +312,12 @@ mp.events.add("User:ResyncArmor", function(player, a) {
     if (player.interface) {
         console.log("User:ResyncArmor", a);
         player.interface.syncArmor(a)
+    }
+});
+mp.events.add("User:Suicide", function(player, a) {
+    if (player.interface) {
+        console.log("User:Suicide", a);
+        player.interface.death()
     }
 });
 module.exports = Player;
