@@ -809,6 +809,7 @@ mp.events.add("GP:ScaleForm", (time, round) => {
     }
 });
 mp.events.add("GP:LobbyCam", (lobbyCam) => {
+    mp.gpGameStarted = true;
     console.log("GP:LobbyCam", JSON.stringify(lobbyCam));
     lobbyCam = JSON.parse(lobbyCam);
     mp.players.local.freezePosition(true);
@@ -840,7 +841,9 @@ mp.events.add("GP:LobbyUpdate", (lobbyData, timeTillStart) => {
     }
 });
 var temp_bodies = [];
-mp.events.add("GP:StartGame", () => {
+mp.events.add("GP:StartGame", (hub) => {
+    if (!hub) 
+        mp.gpGameStarted = true;
     //mp.game.cam.renderScriptCams(false, false, 0, true, false);
     mp.game.player.setTargetingMode(1);
     mp.game.player.setLockon(false);
@@ -932,6 +935,7 @@ setInterval(function() {
 }, 1000)
 mp.events.add("GP:Ping", () => {
     GP_TimeStamp = Date.now();
+    mp.gpGameStarted = true;
 });
 },{"./browser.js":1,"./natives.js":9}],7:[function(require,module,exports){
 var CEFBrowser = require("./browser.js");

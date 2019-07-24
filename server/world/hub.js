@@ -19,7 +19,7 @@ var HUB = new class {
 		player.call("HUB:PlayerCam");
 		player.call("HUB:LoadData", [JSON.stringify(this._safezones), JSON.stringify(this._allowedWeapons), JSON.stringify(this._allowedVehicles)]);
 		setTimeout(function() {
-			player.call("GP:StartGame");
+			player.call("GP:StartGame",[true]);
 			self._players.push(player);
 		}, 5000)
 	}
