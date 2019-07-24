@@ -1,4 +1,5 @@
 var PlayerClass = require("./users/player.js")
+var LobbyManager = require("./users/lobby.js")
 //var Gangwar = require("./users/gangwar.js")
 //var Weapons = require("./users/weapons.js")
 var Lobby = require("./users/lobby.js")
@@ -17,7 +18,17 @@ mp.events.add("playerQuit", function(player, exitType, reason) {
     console.log("disconnect",exitType, reason)
     if (players[player.id]) {
         let player_id = player.id;
-         players[player_id] = null;
+
+        if (player.interface.lobby) {
+            LobbyManager.leaveLobby(player, player.interface.lobby);
+        }
+
+
+
+
+
+
+        players[player_id] = null;
         console.log("Data Saving")
         
     }
