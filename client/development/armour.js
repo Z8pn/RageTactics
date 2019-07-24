@@ -1,4 +1,4 @@
-/*var ArmourData = []; test
+/*var ArmourData = []; test test2
 setInterval(function() {
     mp.players.forEachInStreamRange(player => {
         if (!ArmourData[player]) {
