@@ -6,7 +6,7 @@ var HUB = new class {
 		this._dim = 0;
 		this._safezones = [];
 		this._spawn = {
-			x: 199.15451049804688, 
+			x: 199.15451049804688,
 			y: -1012.1060791015625,
 			z: 29.303680419921875
 		};
@@ -17,9 +17,10 @@ var HUB = new class {
 		player.call("Lobby:Hide");
 		player.interface.spawn(this._spawn.x, this._spawn.y, this._spawn.z, 0, [], 0);
 		player.call("HUB:PlayerCam");
+		player.dimension = 0;
 		player.call("HUB:LoadData", [JSON.stringify(this._safezones), JSON.stringify(this._allowedWeapons), JSON.stringify(this._allowedVehicles)]);
 		setTimeout(function() {
-			player.call("GP:StartGame",[true]);
+			player.call("GP:StartGame", [true]);
 			self._players.push(player);
 		}, 5000)
 	}

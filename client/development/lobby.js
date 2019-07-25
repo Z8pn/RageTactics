@@ -22,7 +22,6 @@ mp.events.add("Lobby:Update", (allMaps, current_lobbies) => {
     camera3.setActiveWithInterp(mp.defaultCam.handle, 60 * 1000 * 10, 0, 0);
     mp.defaultCam = camera3;*/
     CEFBrowser.call("cef_loadLobbies", cache.lobbies)
-    mp.gpGameStarted = false;
 });
 mp.events.add("Lobby:Show", (state) => {
     if (state) {
@@ -40,7 +39,6 @@ mp.events.add("Lobby:Show", (state) => {
     }
 });
 mp.events.add("Lobby:Reset", () => {
-    mp.gpGameStarted = false;
     mp.game.ui.displayHud(true);
     mp.game.ui.displayRadar(true);
     mp.game.cam.renderScriptCams(false, false, 0, true, false);
@@ -60,8 +58,6 @@ mp.events.add("Lobby:LoadObjects", (id, objects) => {
     //LobbyManager:Join
 });
 mp.events.add("GP:StartCam", () => {
-    //if (mp.gpGameStarted == false) {
-    mp.gpGameStarted = true;
     mp.game.ui.displayRadar(false);
     mp.game.ui.displayHud(false);
     CEFBrowser.call("cef_hidewaitingLobby");
@@ -85,12 +81,9 @@ mp.events.add("GP:StartCam", () => {
             }, 200)
         }, 3500);
     }, 1000);
-    // }
 });
 mp.events.add("GP:ScaleForm", (time, round) => {
-    if (mp.gpGameStarted == true) {
-        mp.game.ui.messages.showShard(time, "Round " + round, 1, 0, 2000);
-    }
+    mp.game.ui.messages.showShard(time, "Round " + round, 1, 0, 2000);
 });
 mp.events.add("GP:LobbyCam", (lobbyCam) => {
     mp.gpGameStarted = true;
@@ -121,7 +114,7 @@ mp.events.add("GP:LobbyCam", (lobbyCam) => {
     }, 100)
 });
 mp.events.add("GP:LobbyUpdate", (lobbyData, timeTillStart) => {
-    if (mp.gpGameStarted == false) {
+    if (mp.gpGameStarted == true) {
         lobbyData = JSON.parse(lobbyData);
         CEFBrowser.call("cef_waitingLobby", lobbyData, timeTillStart);
     }
@@ -148,9 +141,10 @@ mp.events.add("GP:StartGame", (hub) => {
         temp_bodies.splice(i);
     })
 })
-mp.events.add('render', (nametags) => {
+mp.events.add("render",() => {
     mp.peds.forEachInStreamRange(cPed => {
         if (cPed.IsDummy) {
+            cPed.freezePosition(false);
             cPed.setNoCollision(mp.players.local.handle, false);
             cPed.setCanRagdoll(true);
             cPed.setRagdollOnCollision(true);
@@ -158,21 +152,22 @@ mp.events.add('render', (nametags) => {
             cPed.setInvincible(false);
             cPed.setCanBeDamaged(true);
             cPed.setOnlyDamagedByPlayer(false);
-            cPed.setToRagdoll(1, 1, 0, false, false, false)
+            cPed.taskSetBlockingOfNonTemporaryEvents(true);
+            cPed.setToRagdoll(5000, 10000, 0, false, false, false)
         }
     })
 });
-mp.events.add("GP:DummyBody", (x, y, z, model, heading, clothing) => {
+mp.events.add("GP:DummyBody", (x, y, z, model, heading, clothing, move_mul) => {
     clothing = JSON.parse(clothing);
     let cur = new mp.Vector3(x, y, z);
-    let Ped = mp.peds.new(model, cur, heading + 90, mp.players.local.dimension);
+    let Ped = mp.peds.new(model, cur, heading - 180, mp.players.local.dimension);
     Ped.IsDummy = true;
     Ped.freezePosition(false);
     Ped.setNoCollision(mp.players.local.handle, false);
     Ped.setCanRagdoll(true);
-    Ped.setToRagdoll(1, 1, 0, false, false, false)
-    let n_cur = cur.findRot(0, 2, heading - 90);
-    Ped.setVelocity((cur.x - n_cur.x), (cur.y - n_cur.y), (cur.z - n_cur.z));
+    Ped.setToRagdoll(5000, 10000, 0, false, false, false)
+    let n_cur = cur.findRot(0, 5, heading - 90);
+    Ped.setVelocity((cur.x - n_cur.x) * move_mul, (cur.y - n_cur.y) * move_mul, (cur.z - n_cur.z) * move_mul);
     clothing.forEach(function(part) {
         Ped.setComponentVariation(part.componentNumber, part.drawable, part.texture, part.palette);
     })

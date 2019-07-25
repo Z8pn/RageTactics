@@ -19,7 +19,7 @@ var HUB = new class {
 }
 mp.events.add('render', (nametags) => {
 	if (mp.players.local.getVariable("current_status") == "hub") {
-		mp.gpGameStarted = false;
+		mp.gpGameState = 0;
 	}
 	if (mp.players.local.getVariable("current_status") == "cam") {
 		mp.game.controls.disableAllControlActions(0);

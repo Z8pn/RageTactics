@@ -211,11 +211,11 @@ let tts = 0;
 
 function cef_waitingLobby(teams, timeToStart) {
     console.log("cef_waitingLobby", teams);
-    let s_string = "";
+    let s_string = `<div class="info">Waiting for players...</div>`;
     if (tts != timeToStart) {
-        s_string = "Starting in " + (parseInt(tts) - 1);
+        s_string = "<div class='info'>Waiting for more players (Starting in " + ((parseInt(tts) - 1) + ")</div>");
     }
-    let xHtml = `<div class="info">Waiting for players... ${s_string}</div>`;
+    let xHtml = s_string;
     teams.forEach(function(team) {
         xHtml += `<div class="team"><div class="name">${team.name}</div><div class="players">`
         team.players.forEach(function(player) {

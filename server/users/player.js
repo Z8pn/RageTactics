@@ -159,14 +159,31 @@ var Player = class {
             return e.weapon == weapon;
         });
         if (wIndex > -1) {
-            console.log("wIndex", wIndex);
-            console.log("weapon", weapon);
             self.weapons[wIndex].ammo -= 1;
             if (self.weapons[wIndex].ammo >= ammo) {
-                console.log("ammo", self.weapons[wIndex].ammo);
-                console.log("rammo", ammo);
                 self.weapons[wIndex].ammo = ammo;
             }
+            let pos = self._player.position;
+            let model = self._player.model;
+            let heading = self._player.heading;
+            let move_mul = 0;
+            if (self._player.action == "jumping") {
+                move_mul = 2;
+            }
+            if (self._player.action == "moving") {
+                move_mul = 1.5;
+            }
+            if (self._player.action == "moving_aiming") {
+                move_mul = 1.1;
+            }
+            if (self._player.action == "moving_reloading") {
+                move_mul = 1;
+            }
+            if (self._player.action == "aiming") {
+                move_mul = 0.4;
+            }
+
+            self._player.call("GP:DummyBody", [pos.x, pos.y, pos.z, model, heading, JSON.stringify([]),move_mul]);
         } else {
             console.log("cheat");
             self._player.removeWeapon(weapon);

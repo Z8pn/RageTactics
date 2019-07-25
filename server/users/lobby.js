@@ -65,7 +65,7 @@ var TeamElimination = class {
         self._MaxRounds = 1;
         self._orgRoundDuration = 5 * 60;
         self._roundDuration = self._orgRoundDuration; // 5 Minutes;
-        self._orgLobbyCooldown = 30;
+        self._orgLobbyCooldown = 5; // wait til start
         self._lobbyWaitCooldown = self._orgLobbyCooldown;
         self._previewCam = {
             x: 0,
@@ -220,7 +220,7 @@ var TeamElimination = class {
             console.log("LOBBY WAITING");
             self.status = e.LOBBY_WAITING;
         } else if (self.status == e.LOBBY_WAITING) {
-            if (!(self.players.length % self.teams.length) && (self.players.length > 0)) {
+            if (!(self.players.length % self.teams.length) && (self.players.length > 1)) {
                 self._lobbyWaitCooldown -= 1;
                 if (self._lobbyWaitCooldown < 1) {
                     console.log("LOBBY_STARTING");
@@ -407,6 +407,7 @@ var TeamElimination = class {
                             e.client.setVariable("team", team);
                             e.client.setVariable("current_status", "cam");
                             e.client.call("GP:StartCam");
+                            e.client.dimension = self._dim;
                             e.client.call("Lobby:LoadObjects", [self.id, JSON.stringify(self.objects)]);
                         } else {
                             self.reset();
