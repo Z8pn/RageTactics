@@ -65,7 +65,7 @@ var TeamElimination = class {
 		self._MaxRounds = 1;
 		self._orgRoundDuration = 5 * 60;
 		self._roundDuration = self._orgRoundDuration; // 5 Minutes;
-		self._orgLobbyCooldown = 5; // wait til start
+		self._orgLobbyCooldown = 15; // wait til start
 		self._lobbyWaitCooldown = self._orgLobbyCooldown;
 		self._previewCam = {
 			x: 0,
@@ -107,7 +107,6 @@ var TeamElimination = class {
 	reset() {
 		let self = this;
 		this._lobbyWaitCooldown = this._orgLobbyCooldown;
-		this.status = e.LOBBY_CREATING;
 		this._teamsDead = [];
 		this._round = 1;
 		if (this._cLoaded) {
@@ -227,7 +226,7 @@ var TeamElimination = class {
 			console.log("LOBBY WAITING");
 			self.status = e.LOBBY_WAITING;
 		} else if (self.status == e.LOBBY_WAITING) {
-			if ( /*!(self.players.length % self.teams.length) &&*/ (self.players.length > 0)) {
+			if (!(self.players.length % self.teams.length) && (self.players.length > 1)) {
 				self._lobbyWaitCooldown -= 1;
 				if (self._lobbyWaitCooldown < 1) {
 					console.log("LOBBY_STARTING");
@@ -696,15 +695,24 @@ var LobbyManager = new class {
 			if (player.interface.lobby == -1) {
 				let lobby = this.getLobbyByID(id);
 				if (lobby) {
-					console.log("Lobby exists");
-					let lobbyRequest = lobby.join(player, teamIndex);
-					if (lobbyRequest == e.LOBBY_JOIN_SUCCESS) {
-						console.log("join success", e.LOBBY_JOIN_SUCCESS);
-						player.call("Lobby:Hide");
+					if (lobby.status != e.LOBBY_CLOSED) {
+						console.log("Lobby exists");
+						let lobbyRequest = lobby.join(player, teamIndex);
+						if (lobbyRequest == e.LOBBY_JOIN_SUCCESS) {
+							console.log("join success", e.LOBBY_JOIN_SUCCESS);
+							player.call("Lobby:Hide");
+						} else {
+							player.call("Lobby:Error", [JSON.stringify({
+								title: "Error",
+								message: "translate:" + lobbyRequest,
+								timeout: 5000,
+								color: "red"
+							})]);
+						}
 					} else {
 						player.call("Lobby:Error", [JSON.stringify({
 							title: "Error",
-							message: "translate:" + lobbyRequest,
+							message: "translate:" + e.LOBBY_CLOSED,
 							timeout: 5000,
 							color: "red"
 						})]);
