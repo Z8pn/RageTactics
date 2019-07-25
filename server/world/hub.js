@@ -13,20 +13,18 @@ var HUB = new class {
 	}
 	join(player) {
 		let self = this;
-		if (!player) 
-			return;
-
-
-		player.setVariable("current_status", "hub");
-		player.call("Lobby:Hide");
-		player.interface.spawn(this._spawn.x, this._spawn.y, this._spawn.z, 0, [], 0);
-		player.call("HUB:PlayerCam");
-		player.dimension = 0;
-		player.call("HUB:LoadData", [JSON.stringify(this._safezones), JSON.stringify(this._allowedWeapons), JSON.stringify(this._allowedVehicles)]);
-		setTimeout(function() {
-			player.call("GP:StartGame", [true]);
-			self._players.push(player);
-		}, 5000)
+		if (player) {
+			player.setVariable("current_status", "hub");
+			player.call("Lobby:Hide");
+			player.interface.spawn(this._spawn.x, this._spawn.y, this._spawn.z, 0, [], 0);
+			player.call("HUB:PlayerCam");
+			player.dimension = 0;
+			player.call("HUB:LoadData", [JSON.stringify(this._safezones), JSON.stringify(this._allowedWeapons), JSON.stringify(this._allowedVehicles)]);
+			setTimeout(function() {
+				player.call("GP:StartGame", [true]);
+				player.push(player);
+			}, 5000)
+		}
 	}
 	addSafeZone(x, y, z, tx, ty, tz) {
 		this._safezones.push({
@@ -39,9 +37,7 @@ var HUB = new class {
 		});
 	}
 	leave(player) {
-		if (player)
-			return;
-		
+		if (!player) return;
 		player.call("Lobby:Hide");
 	}
 	isInHub(player) {
