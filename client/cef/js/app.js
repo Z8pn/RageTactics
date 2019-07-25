@@ -210,7 +210,7 @@ function cef_hidewaitingLobby() {
 let tts = 0;
 
 function cef_waitingLobby(teams, timeToStart) {
-    console.log("cef_waitingLobby", teams);
+    console.log("cef_waitingLobby", teams); 
     let s_string = `<div class="info">Waiting for players...</div>`;
     if (tts != timeToStart) {
         s_string = "<div class='info'>Waiting for more players (Starting in " + ((parseInt(tts) - 1) + ")</div>");
