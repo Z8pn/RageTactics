@@ -80,8 +80,8 @@ var LobbyManager = new class {
         this._lobbyView = false;
     }
     getLobbyById(id) {
-        return this._lobbies.filter(function(a) {
-            return a.id == id;
+        return this._lobbies.find(e => {
+            return e.id == id;
         })
     }
     load(l) {
@@ -95,7 +95,6 @@ var LobbyManager = new class {
         })
         let html = "";
         this._lobbies.forEach(function(lobby) {
-            console.log(lobby);
             html += `<div class="lobby" data-id='${lobby.id}' onclick='LobbyManager.interact("${lobby.id}")'>
                 <div class="background">
                     <img src="${lobby.image}"></img>
@@ -124,8 +123,10 @@ var LobbyManager = new class {
     }
     interact(id) {
         if (this._lobbyView == false) {
-            let lobby = this.getLobbyById(id)[0];
+            console.log("interact with", id);
+            let lobby = this.getLobbyById(id);
             if (lobby) {
+                console.log("lobby", lobby);
                 $("#modal_lobby").find(".title").html(lobby.name);
                 $("#modal_lobby").find(".teams > .info").html("Select a Team");
                 // $("#modal_lobby").find(".teams > .list").html("");
@@ -210,7 +211,7 @@ function cef_hidewaitingLobby() {
 let tts = 0;
 
 function cef_waitingLobby(teams, timeToStart) {
-    console.log("cef_waitingLobby", teams); 
+    console.log("cef_waitingLobby", teams);
     let s_string = `<div class="info">Waiting for players...</div>`;
     if (tts != timeToStart) {
         s_string = "<div class='info'>Waiting for more players (Starting in " + ((parseInt(tts) - 1) + ")</div>");

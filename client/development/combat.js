@@ -42,7 +42,7 @@ var player_bones = {
 	},
 	"SKEL_Head": {
 		bone_id: 31086,
-		threshold: 0.15,
+		threshold: 0.25,
 		offset: {
 			x: 0,
 			y: 0,

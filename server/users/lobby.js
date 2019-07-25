@@ -113,24 +113,30 @@ var TeamElimination = class {
 		if (this._cLoaded) {
 			clearInterval(this._cLoaded);
 		}
-		this.players.forEach(function(player) {
-			LobbyManager.leaveLobby(player.client, self.id);
+		console.log("length", self.players.length)
+		let players = self.players.map(e => {
+			return e.client;
+		});
+		players.forEach(function(player) {
+			console.log("player", player.name);
+			LobbyManager.leaveLobby(player, self.id);
 		})
 	}
 	get score() {
 		return this._score;
 	}
 	addPointToTeam(team) {
-		if (!this._score[team]) this._score[team] = 0;
+		if (this._score[team] == undefined) this._score[team] = 0;
 		this._score[team] += 1;
+		console.log("team score for team", team, this._score[team]);
 	}
 	get winner() {
 		let self = this;
 		let winner = undefined;
 		let hScore = 0;
 		this.teams.forEach(function(e, i) {
-			if (self.score[i] > hScore) {
-				hScore = self.score[i];
+			if (self.score[e.name] > hScore) {
+				hScore = self.score[e.name];
 				winner = e;
 			}
 		});
@@ -290,7 +296,6 @@ var TeamElimination = class {
 				if (player.ready == 0) {
 					player.ready = 1;
 					player.client.setVariable("current_status", "cam");
-					console.log(JSON.stringify(self._previewCam));
 					player.client.call("GP:LobbyCam", [JSON.stringify(self._previewCam)]);
 				} else {
 					player.client.call("GP:Ping");
@@ -315,7 +320,6 @@ var TeamElimination = class {
 					self.players.forEach(function(player) {
 						if (player.ready == 1) {
 							player.client.setVariable("current_status", "cam");
-							console.log(JSON.stringify(self._previewCam));
 							player.client.call("GP:LobbyCam", [JSON.stringify(self._previewCam)]);
 						}
 					});
@@ -395,13 +399,10 @@ var TeamElimination = class {
 				})
 				let team = i;
 				let clothing = e.clothing;
-				console.log("clothing", clothing);
-				console.log("team spawns", team_spawns);
 				self.players.forEach(function(e) {
 					if (e.team == team) {
 						let spawn_pos = team_spawns.pop();
 						if (spawn_pos) {
-							console.log("spawn player at", spawn_pos, clothing, self._dim);
 							e.client.interface.spawn(spawn_pos.x, spawn_pos.y, spawn_pos.z, spawn_pos.heading, clothing);
 							e.client.interface.setEquipment(self.weapons);
 							e.client.setVariable("team", team);
@@ -438,9 +439,9 @@ var TeamElimination = class {
 		let winner = undefined;
 		let hScore = 0;
 		this.teams.forEach(function(e, i) {
-			if (self.score[i] > hScore) {
-				hScore = self.score[i];
-				winner = e;
+			if (self.score[e.name] > hScore) {
+				hScore = self.score[e.name];
+				winner = e.name;
 			}
 		});
 		if (hScore > rounds / 2) {
@@ -451,21 +452,23 @@ var TeamElimination = class {
 			return false;
 		}
 	}
-	end(losingTeam) {
-		console.log("round enderino");
+	end(winningTeam) {
+		console.log("round enderino winner", winningTeam);
 		//calc game score
-		/* let losingTeamArr = this.teams.find(function(e, i) {
-		     return losingTeam == i;
-		 });*/
-		if (losingTeam) {
-			this.addPointToTeam(losingTeam);
-		} else if (losingTeam == undefined) {}
-		console.log(this.score);
+		let winningTeamArr = this.teams.find(function(e, i) {
+		     return winningTeam == i;
+		 });
+		if (winningTeamArr) {
+			this.addPointToTeam(winningTeamArr.name);
+		} else if (winningTeamArr == undefined) {
+			console.log("calculate points by kills");
+		}
+		console.log("SCORE", this.score);
 		//calc game score
 		this.roundreport();
 		let isGameOver = this.isOver();
 		console.log("isGameOver", isGameOver);
-		if (((this.MaxRound - this.round) > 1) && (isGameOver == false)) {
+		if (((this.MaxRound - this.round) > 0) && (isGameOver == false)) {
 			this.status = e.LOBBY_NEW_ROUND;
 		} else {
 			this.status = e.LOBBY_CLOSING;
@@ -496,7 +499,6 @@ var TeamElimination = class {
 			if (action == "aiming") {
 				move_mul = 0.4;
 			}
-
 			victim.position.z -= 5;
 			victim = this.players.find(function(player) {
 				return player.client == victim_ref;
@@ -520,6 +522,9 @@ var TeamElimination = class {
 			let victim_team = this.teams.find(function(e, i) {
 				return victim.team == i;
 			});
+			let killer_team = this.teams.find(function(e, i) {
+				return killer.team == i;
+			});
 			console.log("KILLED VICTIM KILLER");
 			console.log("team", victim_team);
 			let clothes = JSON.stringify(victim_team.clothing);
@@ -532,7 +537,8 @@ var TeamElimination = class {
 			this._teamsDead[victim_team].push(victim);
 			if (this._teamsDead[victim_team].length >= victim_team.players) {
 				console.log(victim_team.name, "team 0 survivors");
-				self.end(victim.team);
+				console.log(killer_team.name, "team winner");
+				self.end(killer.team);
 			}
 		}
 	}
@@ -656,12 +662,13 @@ var LobbyManager = new class {
 				self._lobbies[index] = undefined;
 				delete self._lobbies[index];
 				self._lobbies.splice(index, 1);
-			}, 1000);
+			}, 5000);
 		}
 	}
 	leaveLobby(player, id) {
+		console.log("leaveLobby");
 		if (player.interface) {
-			console.log("leaveLobby");
+			console.log("leaveLobby 1");
 			let lobby = this.getLobbyByID(id);
 			if (lobby) {
 				console.log("Lobby exists");

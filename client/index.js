@@ -106,7 +106,7 @@ var player_bones = {
 	},
 	"SKEL_Head": {
 		bone_id: 31086,
-		threshold: 0.15,
+		threshold: 0.25,
 		offset: {
 			x: 0,
 			y: 0,
@@ -449,7 +449,7 @@ var HUB = new class {
 }
 mp.events.add('render', (nametags) => {
 	if (mp.players.local.getVariable("current_status") == "hub") {
-		mp.gpGameState = 0;
+		mp.gpGameStarted = false;
 	}
 	if (mp.players.local.getVariable("current_status") == "cam") {
 		mp.game.controls.disableAllControlActions(0);
@@ -725,6 +725,10 @@ mp.gpGameStarted = false;
 mp.events.add("Lobby:Update", (allMaps, current_lobbies) => {
     cache.maps = JSON.parse(allMaps);
     cache.lobbies = JSON.parse(current_lobbies);
+    console.log("LOBBIES");
+    cache.lobbies.forEach(function(lobby) {
+        console.log(JSON.stringify(lobby));
+    })
     /*mp.players.local.position = new mp.Vector3(0, 0, 0);
     mp.players.local.setAlpha(0);
     mp.players.local.freezePosition(true);

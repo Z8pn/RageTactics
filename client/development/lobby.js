@@ -8,6 +8,10 @@ mp.gpGameStarted = false;
 mp.events.add("Lobby:Update", (allMaps, current_lobbies) => {
     cache.maps = JSON.parse(allMaps);
     cache.lobbies = JSON.parse(current_lobbies);
+    console.log("LOBBIES");
+    cache.lobbies.forEach(function(lobby) {
+        console.log(JSON.stringify(lobby));
+    })
     /*mp.players.local.position = new mp.Vector3(0, 0, 0);
     mp.players.local.setAlpha(0);
     mp.players.local.freezePosition(true);
