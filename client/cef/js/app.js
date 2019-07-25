@@ -216,7 +216,7 @@ function cef_waitingLobby(teams, timeToStart) {
     let s_string = `<div class="info">Waiting for players...</div>`;
     if (tts != timeToStart) {
         tts = timeToStart;
-        s_string = "<div class='info'>Waiting for more players (Starting in " + ((parseInt(tts) - 1) + ")</div>");
+        s_string = "<div class='info'>Waiting for more players (Starting in " + parseInt(tts) + ")</div>";
     }
     let xHtml = s_string;
     teams.forEach(function(team) {
