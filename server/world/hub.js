@@ -21,9 +21,10 @@ var HUB = new class {
 			player.dimension = 0;
 			player.call("HUB:LoadData", [JSON.stringify(this._safezones), JSON.stringify(this._allowedWeapons), JSON.stringify(this._allowedVehicles)]);
 			setTimeout(function() {
-				if (typeof player != "object") return;
-				self._players.push(player);
-				player.call("GP:StartGame", [true]);
+				if (player.id) {
+					self._players.push(player);
+					player.call("GP:StartGame", [true]);
+				}
 			}, 5000)
 		}
 	}
@@ -38,7 +39,7 @@ var HUB = new class {
 		});
 	}
 	leave(player) {
-		if (typeof player != "object") return;
+		if (!player.id) return;
 		player.call("Lobby:Hide");
 	}
 	isInHub(player) {
