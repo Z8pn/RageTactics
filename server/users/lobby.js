@@ -65,7 +65,7 @@ var TeamElimination = class {
 		self._MaxRounds = 1;
 		self._orgRoundDuration = 5 * 60;
 		self._roundDuration = self._orgRoundDuration; // 5 Minutes;
-		self._orgLobbyCooldown = 15; // wait til start
+		self._orgLobbyCooldown = 5; // wait til start
 		self._lobbyWaitCooldown = self._orgLobbyCooldown;
 		self._previewCam = {
 			x: 0,
@@ -205,8 +205,7 @@ var TeamElimination = class {
 	}
 	get teams() {
 		let temp_teams = this._teams.map(e => {
-			let t = { ...e
-			};
+			let t = { ...e };
 			t.players = 0;
 			return t;
 		});
@@ -226,7 +225,7 @@ var TeamElimination = class {
 			console.log("LOBBY WAITING");
 			self.status = e.LOBBY_WAITING;
 		} else if (self.status == e.LOBBY_WAITING) {
-			if (!(self.players.length % self.teams.length) && (self.players.length > 1)) {
+			if (/*!(self.players.length % self.teams.length) && */(self.players.length > 0)) {
 				self._lobbyWaitCooldown -= 1;
 				if (self._lobbyWaitCooldown < 1) {
 					console.log("LOBBY_STARTING");
@@ -295,8 +294,10 @@ var TeamElimination = class {
 			self.players.forEach(function(player) {
 				if (player.ready == 0) {
 					player.ready = 1;
+					player.client.dimension = self._dim;
 					player.client.setVariable("current_status", "cam");
 					player.client.call("GP:LobbyCam", [JSON.stringify(self._previewCam)]);
+					player.client.call("Lobby:LoadObjects", [self.id, JSON.stringify(self.objects)]);
 				} else {
 					player.client.call("GP:Ping");
 				}
@@ -409,7 +410,6 @@ var TeamElimination = class {
 							e.client.setVariable("current_status", "cam");
 							e.client.call("GP:StartCam");
 							e.client.dimension = self._dim;
-							e.client.call("Lobby:LoadObjects", [self.id, JSON.stringify(self.objects)]);
 						} else {
 							self.reset();
 						}
@@ -606,19 +606,19 @@ var TeamElimination = class {
 let TestLobby1 = new TeamElimination();
 setTimeout(function() {
 	TestLobby1.name = "TestLobby1";
-	TestLobby1.map = "testMap";
+	TestLobby1.map = "LS Supply";
 	TestLobby1.MaxRounds = 5;
 }, 1000)
 let TestLobby2 = new TeamElimination();
 setTimeout(function() {
 	TestLobby2.name = "TestLobby2";
-	TestLobby2.map = "testMap";
+	TestLobby2.map = "Korz Center";
 	TestLobby2.MaxRounds = 3;
 }, 1000)
 let TestLobby3 = new TeamElimination();
 setTimeout(function() {
 	TestLobby3.name = "TestLobby3";
-	TestLobby3.map = "testMap";
+	TestLobby3.map = "Hafen";
 }, 1000)
 var LobbyManager = new class {
 	constructor() {
@@ -683,6 +683,7 @@ var LobbyManager = new class {
 					console.log("lobbyRequest", lobbyRequest)
 					if (lobbyRequest == e.LOBBY_LEAVE_SUCCESS) {
 						console.log("leave succesful")
+						player.call("Lobby:UnloadObjects", [lobby.id]);
 						HUB.join(player);
 					}
 				}
@@ -729,63 +730,7 @@ var LobbyManager = new class {
 		}
 	}
 }
-/*
-{
-    id: null, 
-    class: '',
-    title: '',
-    titleColor: '',
-    titleSize: '',
-    titleLineHeight: '',
-    message: '',
-    messageColor: '',
-    messageSize: '',
-    messageLineHeight: '',
-    backgroundColor: '',
-    theme: 'light', // dark
-    color: '', // blue, red, green, yellow
-    icon: '',
-    iconText: '',
-    iconColor: '',
-    iconUrl: null,
-    image: '',
-    imageWidth: 50,
-    maxWidth: null,
-    zindex: null,
-    layout: 1,
-    balloon: false,
-    close: true,
-    closeOnEscape: false,
-    closeOnClick: false,
-    displayMode: 0, // once, replace
-    position: 'bottomRight', // bottomRight, bottomLeft, topRight, topLeft, topCenter, bottomCenter, center
-    target: '',
-    targetFirst: true,
-    timeout: 5000,
-    rtl: false,
-    animateInside: true,
-    drag: true,
-    pauseOnHover: true,
-    resetOnHover: false,
-    progressBar: true,
-    progressBarColor: '',
-    progressBarEasing: 'linear',
-    overlay: false,
-    overlayClose: false,
-    overlayColor: 'rgba(0, 0, 0, 0.6)',
-    transitionIn: 'fadeInUp',
-    transitionOut: 'fadeOut',
-    transitionInMobile: 'fadeInUp',
-    transitionOutMobile: 'fadeOutDown',
-    buttons: {},
-    inputs: {},
-    onOpening: function () {},
-    onOpened: function () {},
-    onClosing: function () {},
-    onClosed: function () {}
-}
- 
-*/
+
 mp.events.add("LobbyManager:LoadingFinished", function(player, lID) {
 	if (player.interface) {
 		console.log("LobbyManager:LoadingFinished");

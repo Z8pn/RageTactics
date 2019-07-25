@@ -9,7 +9,7 @@ console.log = function(...a) {
     })
     mp.gui.chat.push("DeBuG:" + a.join(" "))
 };
-require("./vector.js")
+require("./utils.js")
 require("./scaleforms/index.js");
 
 

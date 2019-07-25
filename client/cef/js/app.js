@@ -204,13 +204,15 @@ function cef_hidelobby() {
     LobbyManager.hide();
 }
 
+let tts;
 function cef_hidewaitingLobby() {
     $("#lobby_waiting").hide();
+    tts = undefined;
 }
-let tts = 0;
 
 function cef_waitingLobby(teams, timeToStart) {
-    console.log("cef_waitingLobby", teams);
+    if (tts == undefined) tts = timeToStart;
+
     let s_string = `<div class="info">Waiting for players...</div>`;
     if (tts != timeToStart) {
         tts = timeToStart;

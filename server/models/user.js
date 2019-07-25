@@ -27,6 +27,10 @@ var UserSchema = mongoose.Schema({
     rank: {
         type: Number,
         default: 0
+    },
+    gender: {
+        type: Number,
+        default: 0
     }
 }, {
     autoIndex: true

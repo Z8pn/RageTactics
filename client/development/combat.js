@@ -325,10 +325,10 @@ mp.events.add("render", () => {
 	}
 	if (mp.game.graphics.hasStreamedTextureDictLoaded("hud_reticle")) {
 		if ((Date.now() / 1000 - timerHitmarker) <= 0.1) {
-			mp.game.graphics.drawSprite("hud_reticle", "reticle_ar", 0.5, 0.5, 0.025, 0.040, 45, 255, 255, 255, 150);
+			mp.game.graphics.drawSpriteAbsolute("hud_reticle", "reticle_ar", 0.5, 0.5, 60, 60, 45, 255, 255, 255, 150);
 		}
 		if ((Date.now() / 1000 - timerHitmarkerDeath) <= 0.1) {
-			mp.game.graphics.drawSprite("hud_reticle", "reticle_ar", 0.5, 0.5, 0.025, 0.040, 45, 255, 100, 100, 150);
+			mp.game.graphics.drawSpriteAbsolute("hud_reticle", "reticle_ar", 0.5, 0.5, 60, 60, 45, 255, 100, 100, 150);
 		}
 	}
 	if (curHealth > mp.players.local.getHealth()) {

@@ -389,10 +389,10 @@ mp.events.add("render", () => {
 	}
 	if (mp.game.graphics.hasStreamedTextureDictLoaded("hud_reticle")) {
 		if ((Date.now() / 1000 - timerHitmarker) <= 0.1) {
-			mp.game.graphics.drawSprite("hud_reticle", "reticle_ar", 0.5, 0.5, 0.025, 0.040, 45, 255, 255, 255, 150);
+			mp.game.graphics.drawSpriteAbsolute("hud_reticle", "reticle_ar", 0.5, 0.5, 60, 60, 45, 255, 255, 255, 150);
 		}
 		if ((Date.now() / 1000 - timerHitmarkerDeath) <= 0.1) {
-			mp.game.graphics.drawSprite("hud_reticle", "reticle_ar", 0.5, 0.5, 0.025, 0.040, 45, 255, 100, 100, 150);
+			mp.game.graphics.drawSpriteAbsolute("hud_reticle", "reticle_ar", 0.5, 0.5, 60, 60, 45, 255, 100, 100, 150);
 		}
 	}
 	if (curHealth > mp.players.local.getHealth()) {
@@ -511,7 +511,7 @@ console.log = function(...a) {
     })
     mp.gui.chat.push("DeBuG:" + a.join(" "))
 };
-require("./vector.js")
+require("./utils.js")
 require("./scaleforms/index.js");
 
 
@@ -549,7 +549,7 @@ mp.events.add('chatEnabled', (isEnabled) => {
 
 
 });
-},{"./browser.js":1,"./combat.js":2,"./hub.js":3,"./libs/camerasManager.js":5,"./lobby.js":6,"./login.js":7,"./nametag.js":8,"./natives.js":9,"./scaleforms/index.js":13,"./vector.js":14}],5:[function(require,module,exports){
+},{"./browser.js":1,"./combat.js":2,"./hub.js":3,"./libs/camerasManager.js":5,"./lobby.js":6,"./login.js":7,"./nametag.js":8,"./natives.js":9,"./scaleforms/index.js":14,"./utils.js":15}],5:[function(require,module,exports){
 const CamerasManagerInfo = {
     gameplayCamera: null,
     activeCamera: null,
@@ -717,6 +717,7 @@ exports = new Proxy({}, proxyHandler);
 //Lobbies
 var CEFBrowser = require("./browser.js");
 var natives = require("./natives.js");
+var ObjectLoader = require("./object_loader.js")
 var cache = {};
 cache.maps = [];
 cache.lobbies = [];
@@ -724,7 +725,6 @@ mp.gpGameStarted = false;
 mp.events.add("Lobby:Update", (allMaps, current_lobbies) => {
     let maps = JSON.parse(allMaps);
     let lobbies = JSON.parse(current_lobbies);
-
     /*mp.players.local.position = new mp.Vector3(0, 0, 0);
     mp.players.local.setAlpha(0);
     mp.players.local.freezePosition(true);
@@ -768,11 +768,6 @@ mp.events.add("Lobby:Join", (id, teamIndex) => {
     console.log("Join Lobby", id, teamIndex);
     //LobbyManager:Join
     mp.events.callRemote("LobbyManager:Join", id, teamIndex);
-});
-mp.events.add("Lobby:LoadObjects", (id, objects) => {
-    console.log("Lobby:LoadObjects", id, objects);
-    mp.events.callRemote("LobbyManager:LoadingFinished", id);
-    //LobbyManager:Join
 });
 mp.events.add("GP:StartCam", () => {
     mp.game.ui.displayRadar(false);
@@ -835,6 +830,16 @@ mp.events.add("GP:LobbyUpdate", (lobbyData, timeTillStart) => {
         lobbyData = JSON.parse(lobbyData);
         CEFBrowser.call("cef_waitingLobby", lobbyData, timeTillStart);
     }
+});
+/*Object Loading*/
+mp.events.add("Lobby:LoadObjects", (id, objects) => {
+    console.log("Lobby:LoadObjects", id, objects);
+    //LobbyManager:Join
+    ObjectLoader.load(id, JSON.parse(objects));
+});
+mp.events.add("Lobby:UnloadObjects", (id) => {
+    console.log("Unloading objects");
+    ObjectLoader.unload();
 });
 var temp_bodies = [];
 mp.events.add("GP:StartGame", (hub) => {
@@ -934,7 +939,7 @@ mp.events.add("GP:Ping", () => {
     GP_TimeStamp = Date.now();
     mp.gpGameStarted = true;
 });
-},{"./browser.js":1,"./natives.js":9}],7:[function(require,module,exports){
+},{"./browser.js":1,"./natives.js":9,"./object_loader.js":10}],7:[function(require,module,exports){
 var CEFBrowser = require("./browser.js");
 mp.events.add("Server:RequestLogin", () => {
     mp.players.local.position = new mp.Vector3(-76.66345977783203, -818.8128051757812, 327.5135498046875);
@@ -1096,6 +1101,96 @@ natives.SET_ENTITY_NO_COLLISION_ENTITY = (entity1, entity2, collision) => mp.gam
 natives.SET_PED_TO_RAGDOLL = ( ped,  time1,  time2,  ragdollType,  p4,  p5,  p6) => mp.game.invoke("0xAE99FB955581844A", ped,  time1,  time2,  ragdollType,  p4,  p5,  p6); // SET_PED_TO_RAGDOLL
 module.exports = natives;
 },{}],10:[function(require,module,exports){
+var ObjectLoader = new class {
+	constructor() {
+		let self = this;
+		self._loadedObjects = [];
+		self._toLoad = [];
+		self._progress = {
+			toLoad: 1000,
+			loaded: 5
+		}
+		self._loadTimer = 100;
+		self._lastLoad = Date.now();
+		self._active = false;
+		self._renderEvent = undefined;
+		self._lobby = -1;
+	}
+	toggleRender(state) {
+		let self = this;
+		if (!state) state = !self._active;
+		if (state == true) {
+			self._active = true;
+			if (!self._renderEvent) {
+				self._renderEvent = new mp.Event('render', () => {
+					self.render();
+				});
+			}
+		} else {
+			self._active = false;
+			self._renderEvent.destroy();
+			self._renderEvent = undefined;
+		}
+	}
+	render() {
+		let self = this;
+		if (self._active == true) {
+			let max_width = 0.1;
+			let max_height = 0.008;
+			mp.game.graphics.drawRect(0.5, 0.5, max_width, max_height, 0, 0, 0, 150);
+			let cur_width = max_width / self._progress.toLoad * self._progress.loaded;
+			mp.game.graphics.drawRect(0.5 - max_width / 2 + (cur_width / 2), 0.5, cur_width, max_height, 0, 255, 0, 150);
+			mp.game.graphics.drawText(`Loading Objects (${ self._progress.loaded}/${self._progress.toLoad})`, [0.5, 0.52], {
+				font: 4,
+				color: [255, 255, 255, 185],
+				scale: [0.3, 0.3],
+				outline: true,
+				centre: true
+			});
+			if ((Date.now() - self._lastLoad) >= self._loadTimer) {
+				self._lastLoad = Date.now();
+				let nextObject = self._toLoad.pop();
+				if (nextObject) {
+					mp.game.streaming.requestModel(mp.game.joaat(nextObject.model));
+					if (mp.game.streaming.hasModelLoaded(mp.game.joaat(nextObject.model))) {
+						let temp_object = mp.objects.new(mp.game.joaat(nextObject.model), new mp.Vector3(nextObject.x, nextObject.y, nextObject.z), {
+							rotation: new mp.Vector3(nextObject.rx, nextObject.ry, nextObject.rz),
+							alpha: 255,
+							dimension: mp.players.local.dimension
+						});
+						temp_object.freezePosition(true);
+						self._loadedObjects.push(temp_object)
+						self._progress.loaded += 1;
+					}
+				}
+				if (self._progress.loaded == self._progress.toLoad) {
+					self.loaded();
+				}
+			}
+		}
+	}
+	unload() {
+		this._loadedObjects.forEach(function(object) {
+			object.destroy();
+		})
+	}
+	loaded() {
+		console.log("loaded");
+		this.toggleRender(false);
+		mp.events.callRemote("LobbyManager:LoadingFinished", this._lobby);
+	}
+	load(lobbyId, arrObjects) {
+		this._toLoad = arrObjects
+		this._lobby = lobbyId;
+		this._progress = {
+			toLoad: arrObjects.length,
+			loaded: 0
+		}
+		this.toggleRender(true);
+	}
+}
+module.exports = ObjectLoader;
+},{}],11:[function(require,module,exports){
 var messageScaleform = require("./Scaleform.js");
 let bigMessageScaleform = null;
 let bigMsgInit = 0;
@@ -1146,7 +1241,7 @@ mp.events.add("render", () => {
         }
     }
 });
-},{"./Scaleform.js":12}],11:[function(require,module,exports){
+},{"./Scaleform.js":13}],12:[function(require,module,exports){
 var messageScaleform = require("./Scaleform.js");
 let midsizedMessageScaleform = null;
 let msgInit = 0;
@@ -1190,7 +1285,7 @@ mp.events.add("render", () => {
         }
     }
 });
-},{"./Scaleform.js":12}],12:[function(require,module,exports){
+},{"./Scaleform.js":13}],13:[function(require,module,exports){
 class BasicScaleform {
     constructor(scaleformName) {
         this.handle = mp.game.graphics.requestScaleformMovie(scaleformName);
@@ -1236,7 +1331,7 @@ class BasicScaleform {
 }
 
 module.exports = BasicScaleform;
-},{}],13:[function(require,module,exports){
+},{}],14:[function(require,module,exports){
 var messageScaleform = require("./Scaleform.js");
 require("./BigMessage.js");
 require("./MidsizedMessage.js");
@@ -1248,7 +1343,7 @@ mp.game.ui.messages = {
     showMidsized: (title, message, time = 5000) => mp.events.call("ShowMidsizedMessage", title, message, time),
     showMidsizedShard: (title, message, bgColor, useDarkerShard, condensed, time = 5000) => mp.events.call("ShowMidsizedShardMessage", title, message, bgColor, useDarkerShard, condensed, time)
 };
-},{"./BigMessage.js":10,"./MidsizedMessage.js":11,"./Scaleform.js":12}],14:[function(require,module,exports){
+},{"./BigMessage.js":11,"./MidsizedMessage.js":12,"./Scaleform.js":13}],15:[function(require,module,exports){
 mp.Vector3.prototype.findRot = function(rz, dist, rot) {
     let nVector = new mp.Vector3(this.x, this.y, this.z);
     let degrees = (rz + rot) * (Math.PI / 180);
@@ -1277,7 +1372,6 @@ mp.Vector3.prototype.toPixels = function() {
         y: Math.floor(clientScreen.y * toScreen.y) + "px"
     };
 }
-
 mp.Vector3.prototype.lerp = function(vector2, deltaTime) {
     let nVector = new mp.Vector3(this.x, this.y, this.z);
     nVector.x = this.x + (vector2.x - this.x) * deltaTime
@@ -1394,5 +1488,11 @@ mp.isValid = function(val) {
 }
 mp.lerp = function(a, b, n) {
     return (1 - n) * a + n * b;
+}
+mp.game.graphics.drawSpriteAbsolute = function(textureDict, textureName, screenX, screenY, scaleX, scaleY, heading, colorR, colorG, colorB, alpha) {
+    //2560x1440
+    scaleX = 1.0 / 2560 * scaleX;
+    scaleY = 1.0 / 1440 * scaleY;
+    return mp.game.graphics.drawSprite(textureDict, textureName, screenX, screenY, scaleX, scaleY, heading, colorR, colorG, colorB, alpha);
 }
 },{}]},{},[4]);

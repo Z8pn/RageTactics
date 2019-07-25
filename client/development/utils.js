@@ -26,7 +26,6 @@ mp.Vector3.prototype.toPixels = function() {
         y: Math.floor(clientScreen.y * toScreen.y) + "px"
     };
 }
-
 mp.Vector3.prototype.lerp = function(vector2, deltaTime) {
     let nVector = new mp.Vector3(this.x, this.y, this.z);
     nVector.x = this.x + (vector2.x - this.x) * deltaTime
@@ -143,4 +142,10 @@ mp.isValid = function(val) {
 }
 mp.lerp = function(a, b, n) {
     return (1 - n) * a + n * b;
+}
+mp.game.graphics.drawSpriteAbsolute = function(textureDict, textureName, screenX, screenY, scaleX, scaleY, heading, colorR, colorG, colorB, alpha) {
+    //2560x1440
+    scaleX = 1.0 / 2560 * scaleX;
+    scaleY = 1.0 / 1440 * scaleY;
+    return mp.game.graphics.drawSprite(textureDict, textureName, screenX, screenY, scaleX, scaleY, heading, colorR, colorG, colorB, alpha);
 }

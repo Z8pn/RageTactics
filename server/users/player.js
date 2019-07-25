@@ -25,6 +25,7 @@ var Player = class {
         self._armor = 100;
         self._damage = [];
         self.weapons = [];
+        self._gender = 0;
         self._curLobby = -1;
         this._player.setVariable("lobby_id", 0);
     }
@@ -33,6 +34,10 @@ var Player = class {
     }
     error(...args) {
         console.error("Account:Error", args)
+    }
+    loadData(data) {
+        this._gender = data.gender;
+        console.log("load db data");
     }
     addDamage(attacker_id, weapon, damage, bodypart) {
         console.log("addDamage", attacker_id, weapon, damage, bodypart);
@@ -79,10 +84,10 @@ var Player = class {
         this._State = state;
     }
     syncHealth(nHP) {
-        this.health = nHP;
+        if (nHP < this.health) this.health = nHP;
     }
     syncArmor(nAr) {
-        this.armor = nAr;
+        if (nAr < this.armor) this.armor = nAr;
     }
     isDead() {
         return this._death;
@@ -174,7 +179,7 @@ var Player = class {
         let self = this;
         if (self.isSpawned == false) {
             self._player.spawn(new mp.Vector3(x, y, z));
-            self._player.model = mp.joaat('mp_m_freemode_01');
+            self._player.model = (self._gender == 0) ? mp.joaat('mp_m_freemode_01') : mp.joaat('mp_f_freemode_01');
             //self._player.model = mp.joaat('mp_f_freemode_01');
             self._player.heading = heading || 0;
             self.health = 100;
@@ -190,7 +195,9 @@ var Player = class {
             self._player.setVariable("spawned", true);
             self._player.dimension = dim || 0;
             clothing.forEach(function(part) {
-                self._player.setClothes(part.componentNumber, part.drawable, part.texture, part.palette);
+                if (part.gender == self._gender) {
+                    self._player.setClothes(part.componentNumber, part.drawable, part.texture, part.palette);
+                }
             })
             return true;
         } else {
@@ -240,6 +247,7 @@ var Player = class {
                     console.log("registered");
                     self._dbUser = result;
                     self._id = result.id;
+                    self.loadData(self._dbUser);
                     self._player.call("Account:HideLogin");
                     self.sendLobbyData();
                     HUB.join(self._player);
@@ -262,6 +270,7 @@ var Player = class {
                 if (result) {
                     self._dbUser = result;
                     self._id = result.id;
+                    self.loadData(self._dbUser);
                     self._player.call("Account:HideLogin");
                     self.sendLobbyData();
                     HUB.join(self._player);

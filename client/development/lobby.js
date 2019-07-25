@@ -1,6 +1,7 @@
 //Lobbies
 var CEFBrowser = require("./browser.js");
 var natives = require("./natives.js");
+var ObjectLoader = require("./object_loader.js")
 var cache = {};
 cache.maps = [];
 cache.lobbies = [];
@@ -8,7 +9,6 @@ mp.gpGameStarted = false;
 mp.events.add("Lobby:Update", (allMaps, current_lobbies) => {
     let maps = JSON.parse(allMaps);
     let lobbies = JSON.parse(current_lobbies);
-
     /*mp.players.local.position = new mp.Vector3(0, 0, 0);
     mp.players.local.setAlpha(0);
     mp.players.local.freezePosition(true);
@@ -52,11 +52,6 @@ mp.events.add("Lobby:Join", (id, teamIndex) => {
     console.log("Join Lobby", id, teamIndex);
     //LobbyManager:Join
     mp.events.callRemote("LobbyManager:Join", id, teamIndex);
-});
-mp.events.add("Lobby:LoadObjects", (id, objects) => {
-    console.log("Lobby:LoadObjects", id, objects);
-    mp.events.callRemote("LobbyManager:LoadingFinished", id);
-    //LobbyManager:Join
 });
 mp.events.add("GP:StartCam", () => {
     mp.game.ui.displayRadar(false);
@@ -119,6 +114,16 @@ mp.events.add("GP:LobbyUpdate", (lobbyData, timeTillStart) => {
         lobbyData = JSON.parse(lobbyData);
         CEFBrowser.call("cef_waitingLobby", lobbyData, timeTillStart);
     }
+});
+/*Object Loading*/
+mp.events.add("Lobby:LoadObjects", (id, objects) => {
+    console.log("Lobby:LoadObjects", id, objects);
+    //LobbyManager:Join
+    ObjectLoader.load(id, JSON.parse(objects));
+});
+mp.events.add("Lobby:UnloadObjects", (id) => {
+    console.log("Unloading objects");
+    ObjectLoader.unload();
 });
 var temp_bodies = [];
 mp.events.add("GP:StartGame", (hub) => {
