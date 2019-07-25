@@ -455,7 +455,7 @@ var TeamElimination = class {
 	end(winningTeam) {
 		console.log("round enderino winner", winningTeam);
 		//calc game score
-		if (winningTeam) {
+		if (winningTeam != undefined) {
 			let winningTeamArr = this.teams.find(function(e, i) {
 				return winningTeam == i;
 			});
@@ -469,6 +469,7 @@ var TeamElimination = class {
 		//calc game score
 		this.roundreport();
 		let isGameOver = this.isOver();
+		mp.players.broadcast(`Winner :${this.winner.name}`);
 		console.log("isGameOver", isGameOver);
 		if (((this.MaxRound - this.round) > 0) && (isGameOver == false)) {
 			this.status = e.LOBBY_NEW_ROUND;
