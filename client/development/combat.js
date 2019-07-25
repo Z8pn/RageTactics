@@ -178,9 +178,8 @@ var player_bones = {
 }
 
 function getWeaponDetails(weapon) {
-	if (shotgunSpreadData[weapon]) return shotgunSpreadData[weapon]
-	else return {
-		spray: 1.5,
+	return {
+		spray: 2.5,
 		max_dist: 30
 	};
 }

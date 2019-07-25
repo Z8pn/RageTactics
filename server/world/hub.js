@@ -13,6 +13,10 @@ var HUB = new class {
 	}
 	join(player) {
 		let self = this;
+		if (!player) 
+			return;
+
+
 		player.setVariable("current_status", "hub");
 		player.call("Lobby:Hide");
 		player.interface.spawn(this._spawn.x, this._spawn.y, this._spawn.z, 0, [], 0);
@@ -35,6 +39,9 @@ var HUB = new class {
 		});
 	}
 	leave(player) {
+		if (player)
+			return;
+		
 		player.call("Lobby:Hide");
 	}
 	isInHub(player) {

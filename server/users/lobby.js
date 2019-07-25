@@ -496,6 +496,8 @@ var TeamElimination = class {
 			if (action == "aiming") {
 				move_mul = 0.4;
 			}
+
+			victim.position.z -= 5;
 			victim = this.players.find(function(player) {
 				return player.client == victim_ref;
 			});
@@ -522,7 +524,7 @@ var TeamElimination = class {
 			console.log("team", victim_team);
 			let clothes = JSON.stringify(victim_team.clothing);
 			this.players.forEach(function(player) {
-				player.client.call("GP:DummyBody", [pos.x, pos.y, pos.z, model, heading, JSON.stringify([]), move_mul]);
+				player.client.call("GP:DummyBody", [pos.x, pos.y, pos.z, model, heading, clothes, move_mul]);
 			});
 			if (!this._teamsDead[victim_team]) {
 				this._teamsDead[victim_team] = [];
