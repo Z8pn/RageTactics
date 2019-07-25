@@ -28,7 +28,6 @@ mp.events.add('render', (nametags) => {
 var LobbyState = false;
 mp.keys.bind(0x72, false, function() {
 	if (mp.gpGameStarted == false) {
-		console.log("show lobby");
 		mp.events.call("Lobby:Show", !LobbyState);
 		LobbyState = !LobbyState;
 	}

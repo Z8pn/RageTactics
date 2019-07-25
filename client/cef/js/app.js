@@ -213,6 +213,7 @@ function cef_waitingLobby(teams, timeToStart) {
     console.log("cef_waitingLobby", teams);
     let s_string = `<div class="info">Waiting for players...</div>`;
     if (tts != timeToStart) {
+        tts = timeToStart;
         s_string = "<div class='info'>Waiting for more players (Starting in " + ((parseInt(tts) - 1) + ")</div>");
     }
     let xHtml = s_string;
@@ -225,7 +226,6 @@ function cef_waitingLobby(teams, timeToStart) {
     })
     $("#lobby_waiting").html(xHtml);
     $("#lobby_waiting").show();
-    tts = timeToStart;
 }
 
 function cef_notification(n) {

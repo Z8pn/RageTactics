@@ -6,12 +6,9 @@ cache.maps = [];
 cache.lobbies = [];
 mp.gpGameStarted = false;
 mp.events.add("Lobby:Update", (allMaps, current_lobbies) => {
-    cache.maps = JSON.parse(allMaps);
-    cache.lobbies = JSON.parse(current_lobbies);
-    console.log("LOBBIES");
-    cache.lobbies.forEach(function(lobby) {
-        console.log(JSON.stringify(lobby));
-    })
+    let maps = JSON.parse(allMaps);
+    let lobbies = JSON.parse(current_lobbies);
+
     /*mp.players.local.position = new mp.Vector3(0, 0, 0);
     mp.players.local.setAlpha(0);
     mp.players.local.freezePosition(true);
@@ -25,7 +22,7 @@ mp.events.add("Lobby:Update", (allMaps, current_lobbies) => {
     camera3.setActive(true);
     camera3.setActiveWithInterp(mp.defaultCam.handle, 60 * 1000 * 10, 0, 0);
     mp.defaultCam = camera3;*/
-    CEFBrowser.call("cef_loadLobbies", cache.lobbies)
+    CEFBrowser.call("cef_loadLobbies", lobbies)
 });
 mp.events.add("Lobby:Show", (state) => {
     if (state) {
@@ -145,7 +142,7 @@ mp.events.add("GP:StartGame", (hub) => {
         temp_bodies.splice(i);
     })
 })
-mp.events.add("render",() => {
+mp.events.add("render", () => {
     mp.peds.forEachInStreamRange(cPed => {
         if (cPed.IsDummy) {
             cPed.freezePosition(false);
@@ -203,16 +200,16 @@ function GP_CheckConnectivity() {
                 mp.game.graphics.transitionToBlurred(1);
             }
         }
-    } else {
-        if (mp.players.local.getVariable("spawned")) {
-            LB_Updates++;
-            if (LB_Updates > 5) {
-                LB_Updates = 0;
-                console.log("request lobby");
-                mp.events.callRemote("User:RequestLobby");
-            }
+    } //else {
+    if (mp.players.local.getVariable("spawned")) {
+        LB_Updates++;
+        if (LB_Updates > 5) {
+            LB_Updates = 0;
+            console.log("request lobby");
+            mp.events.callRemote("User:RequestLobby");
         }
     }
+    //}
 }
 setInterval(function() {
     GP_CheckConnectivity();
