@@ -126,7 +126,6 @@ var LobbyManager = new class {
             console.log("interact with", id);
             let lobby = this.getLobbyById(id);
             if (lobby) {
-                console.log("lobby", lobby);
                 $("#modal_lobby").find(".title").html(lobby.name);
                 $("#modal_lobby").find(".teams > .info").html("Select a Team");
                 // $("#modal_lobby").find(".teams > .list").html("");
