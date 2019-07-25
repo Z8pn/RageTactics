@@ -206,7 +206,8 @@ var TeamElimination = class {
 	}
 	get teams() {
 		let temp_teams = this._teams.map(e => {
-			let t = e;
+			let t = { ...e
+			};
 			t.players = 0;
 			return t;
 		});
@@ -226,7 +227,7 @@ var TeamElimination = class {
 			console.log("LOBBY WAITING");
 			self.status = e.LOBBY_WAITING;
 		} else if (self.status == e.LOBBY_WAITING) {
-			if (!(self.players.length % self.teams.length) && (self.players.length > 1)) {
+			if ( /*!(self.players.length % self.teams.length) &&*/ (self.players.length > 0)) {
 				self._lobbyWaitCooldown -= 1;
 				if (self._lobbyWaitCooldown < 1) {
 					console.log("LOBBY_STARTING");
@@ -455,12 +456,14 @@ var TeamElimination = class {
 	end(winningTeam) {
 		console.log("round enderino winner", winningTeam);
 		//calc game score
-		let winningTeamArr = this.teams.find(function(e, i) {
-		     return winningTeam == i;
-		 });
-		if (winningTeamArr) {
-			this.addPointToTeam(winningTeamArr.name);
-		} else if (winningTeamArr == undefined) {
+		if (winningTeam) {
+			let winningTeamArr = this.teams.find(function(e, i) {
+				return winningTeam == i;
+			});
+			if (winningTeamArr) {
+				this.addPointToTeam(winningTeamArr.name);
+			}
+		} else if (winningTeam == undefined) {
 			console.log("calculate points by kills");
 		}
 		console.log("SCORE", this.score);
@@ -538,7 +541,11 @@ var TeamElimination = class {
 			if (this._teamsDead[victim_team].length >= victim_team.players) {
 				console.log(victim_team.name, "team 0 survivors");
 				console.log(killer_team.name, "team winner");
-				self.end(killer.team);
+				if (victim_team == killer_team) {
+					self.end();
+				} else {
+					self.end(killer.team);
+				}
 			}
 		}
 	}
@@ -629,7 +636,7 @@ var LobbyManager = new class {
 	}
 	get lobbies() {
 		return this._lobbies.map(e => {
-			return {
+			let lobby = {
 				name: e.name,
 				image: e.image,
 				id: e.id,
@@ -640,7 +647,9 @@ var LobbyManager = new class {
 				teams: e.teams,
 				rounds: e.MaxRound,
 				mode: e.mode
-			}
+			};
+			console.log(lobby.teams);
+			return lobby
 		})
 	}
 	getLobbyPlayerIsIn(player) {
@@ -672,11 +681,13 @@ var LobbyManager = new class {
 			let lobby = this.getLobbyByID(id);
 			if (lobby) {
 				console.log("Lobby exists");
-				let lobbyRequest = lobby.leave(player);
-				console.log("lobbyRequest", lobbyRequest)
-				if (lobbyRequest == e.LOBBY_LEAVE_SUCCESS) {
-					console.log("leave succesful")
-					HUB.join(player);
+				if (player) {
+					let lobbyRequest = lobby.leave(player);
+					console.log("lobbyRequest", lobbyRequest)
+					if (lobbyRequest == e.LOBBY_LEAVE_SUCCESS) {
+						console.log("leave succesful")
+						HUB.join(player);
+					}
 				}
 			}
 		}

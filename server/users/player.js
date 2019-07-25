@@ -26,6 +26,7 @@ var Player = class {
         self._damage = [];
         self.weapons = [];
         self._curLobby = -1;
+        this._player.setVariable("lobby_id", 0);
     }
     log(...args) {
         console.log("Account:Log", args)
@@ -44,6 +45,7 @@ var Player = class {
     }
     set lobby(id) {
         this._curLobby = id;
+        this._player.setVariable("lobby_id", id);
     }
     get lobby() {
         return this._curLobby;
@@ -163,7 +165,6 @@ var Player = class {
             if (self.weapons[wIndex].ammo >= ammo) {
                 self.weapons[wIndex].ammo = ammo;
             }
-            
         } else {
             console.log("cheat");
             self._player.removeWeapon(weapon);
@@ -226,7 +227,6 @@ var Player = class {
         var self = this;
         let allMaps = MapManager.maps;
         let current_lobbies = LobbyManager.lobbies;
-        console.log("Lobby show");
         self._State = "lobby";
         self._player.setVariable("current_status", "lobby");
         self._player.call("Lobby:Update", [JSON.stringify(allMaps), JSON.stringify(current_lobbies)])
