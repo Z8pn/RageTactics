@@ -636,7 +636,7 @@ var LobbyManager = new class {
 	}
 	get lobbies() {
 		return this._lobbies.map(e => {
-			let lobby = {
+			return {
 				name: e.name,
 				image: e.image,
 				id: e.id,
@@ -648,8 +648,6 @@ var LobbyManager = new class {
 				rounds: e.MaxRound,
 				mode: e.mode
 			};
-			console.log(lobby.teams);
-			return lobby
 		})
 	}
 	getLobbyPlayerIsIn(player) {
