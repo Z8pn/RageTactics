@@ -20,10 +20,8 @@ var HUB = new class {
 			player.call("HUB:PlayerCam");
 			player.dimension = 0;
 			player.call("HUB:LoadData", [JSON.stringify(this._safezones), JSON.stringify(this._allowedWeapons), JSON.stringify(this._allowedVehicles)]);
-			
 			setTimeout(function() {
-				if (!player)
-					return;
+				if (typeof player != "object") return;
 				self._players.push(player);
 				player.call("GP:StartGame", [true]);
 			}, 5000)
@@ -40,7 +38,7 @@ var HUB = new class {
 		});
 	}
 	leave(player) {
-		if (!player) return;
+		if (typeof player != "object") return;
 		player.call("Lobby:Hide");
 	}
 	isInHub(player) {
