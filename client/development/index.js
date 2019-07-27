@@ -22,6 +22,7 @@ require("./login.js")
 require("./hub.js")
 require("./nametag.js")
 require("./combat.js")
+require("./gameplay.js")
 
 
 // Account Stuff

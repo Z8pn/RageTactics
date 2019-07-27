@@ -1,4 +1,5 @@
 const fs = require('fs');
+
 var MapManager = class {
 	constructor() {
 		let self = this;
@@ -10,26 +11,22 @@ var MapManager = class {
 		let self = this;
 		let m = Object.keys(self._loadedMaps).map(e => {
 			return {
-				name:self._loadedMaps[e].name,
-				weapons:self._loadedMaps[e].weapons,
-				teams:self._loadedMaps[e].teams
+				name: self._loadedMaps[e].name,
+				weapons: self._loadedMaps[e].weapons,
+				teams: self._loadedMaps[e].teams
 			};
 		});
-		/*console.log("maps",Object.keys(self._loadedMaps).map(e => {
-			let e = self._loadedMaps[e];
-			return e.name;
-		}))*/
+
 		return m;
 	}
 	getMapData(name) {
 		let self = this;
-		let map = Object.keys(this._loadedMaps).findIndex(e => {
+		let map = Object.keys(self._loadedMaps).findIndex(e => {
 			e = self._loadedMaps[e];
 			return e.name == name;
 		})
-		map = this._loadedMaps[Object.keys(this._loadedMaps)[map]];
+		map = self._loadedMaps[Object.keys(this._loadedMaps)[map]];
 		if (map) {
-			console.log("map",map);
 			return {
 				name: map.name || "",
 				image: map.image || "",
@@ -57,7 +54,6 @@ var MapManager = class {
 		let self = this;
 		console.log("loadmap", fileName);
 		let temp_map = require("./maps/" + fileName);
-		console.log("temp_map", temp_map);
 		if (temp_map.spawns.length >= temp_map.max_players) {
 			self._loadedMaps[fileName.replace(".js", "")] = {
 				name: temp_map.name,
