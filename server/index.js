@@ -5,7 +5,6 @@ var LobbyManager = require("./world/lobby.js")
 //var Weapons = require("./users/weapons.js")
 var Lobby = require("./users/lobby.js")
 var getDeathReason = require("./libs/death_reasons.js")
-
 var players = [];
 mp.events.add("ServerAccount:Ready", function(player) {
     player.setVariable("loggedIn", false);
@@ -16,21 +15,17 @@ mp.events.add("ServerAccount:Ready", function(player) {
     player.position.y = 9000;
 });
 mp.events.add("playerQuit", function(player, exitType, reason) {
-    console.log("disconnect",exitType, reason)
+    console.log("disconnect", exitType, reason)
     if (players[player.id]) {
         let player_id = player.id;
-
         if (player.interface.lobby) {
             LobbyManager.leaveLobby(player, player.interface.lobby);
         }
         players[player_id].save().then(function() {
-
             console.log("saved");
         })
-
         players[player_id] = null;
         console.log(`${player.name} disconnected Reason ${exitType}`)
-        
     }
 });
 mp.events.add("ServerAccount:Login", function(player, username, password) {
@@ -45,11 +40,6 @@ mp.events.add("ServerAccount:Register", function(player, username, password) {
         players[player.id].register(username, password)
     }
 });
-
-
-
-
-
 
 
 

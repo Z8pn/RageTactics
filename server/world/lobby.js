@@ -218,9 +218,26 @@ var TeamElimination = class {
 		return temp_teams;
 	}
 	mapScoreboard() {
-
-
-
+		let self = this;
+		let scoreboard = [];
+		scoreboard.map = self.map;
+		scoreboard.round = self.round;
+		scoreboard.max_rounds = self.MaxRounds;
+		scoreboard.round_time = self.round_duration;
+		scoreboard.max_round_time = self._orgLobbyCooldown;
+		scoreboard.teams = self.teams;
+		scoreboard.players = self.players.map(e => {
+			return {
+				name: e.client.name,
+				dead: e.dead,
+				kills: e.kills,
+				deaths: e.deaths,
+				ping: e.client.ping
+			}
+		})
+		self.players.forEach(function(player) {
+			player.client.call("Lobby:Scoreboard", [JSON.stringify(scoreboard)]);
+		});
 	}
 	update_status() {
 		let self = this;
@@ -280,24 +297,6 @@ var TeamElimination = class {
 				self.round_duration = self._orgRoundDuration;
 				self.end();
 			}
-			let team_names = this.teams.map(e => {
-				return e.name;
-			});
-			let team = this.players.map(e => {
-				return {
-					team: team_names[e.team],
-					name: e.client.name,
-					dead: e.client.interface.isDead(),
-					ping: e.client.ping,
-					kills: e.kills,
-					deaths: e.deaths,
-					assists: e.assists
-				};
-			})
-			console.log("total team", team);
-			self.players.forEach(function(player) {
-				player.client.call("GP:RoundInfo", [self.round_duration, JSON.stringify(team)]);
-			});
 		}
 		if (self.players.length > 0) {
 			self.players.forEach(function(player) {
@@ -311,7 +310,7 @@ var TeamElimination = class {
 					player.client.call("GP:Ping");
 				}
 				if (self.status == e.LOBBY_WAITING) {
-					player.client.call("Lobby:WaitingUpdate", [JSON.stringify(tPlayerNames), self._lobbyWaitCooldown]);
+					player.client.call("Lobby:WaitingUpdate", [self._lobbyWaitCooldown]);
 				}
 			})
 			if (self.status == e.LOBBY_NEW_ROUND) {
@@ -416,6 +415,7 @@ var TeamElimination = class {
 					if (e.team == team) {
 						let spawn_pos = team_spawns.pop();
 						if (spawn_pos) {
+							e.dead = 0;
 							e.client.interface.spawn(spawn_pos.x, spawn_pos.y, spawn_pos.z, spawn_pos.heading, clothing);
 							e.client.interface.setEquipment(self.weapons);
 							e.client.setVariable("team", team);
@@ -524,6 +524,7 @@ var TeamElimination = class {
 			});
 			killer.kills += 1;
 			victim.deaths += 1;
+			victim.dead = 1;
 			let assist_player = victim_ref.interface.assist(killer_ref);
 			if (assist_player) {
 				let a_player = this.players.find(function(player) {
@@ -610,6 +611,7 @@ var TeamElimination = class {
 						kills: 0,
 						deaths: 0,
 						assists: 0,
+						dead: 0,
 						ready: 0
 					})
 					player.setVariable("current_status", "lobby");
