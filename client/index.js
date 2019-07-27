@@ -649,6 +649,8 @@ mp.events.add('chatEnabled', (isEnabled) => {
 
 
 });
+
+
 },{"./browser.js":1,"./combat.js":2,"./gameplay.js":3,"./hub.js":4,"./libs/camerasManager.js":6,"./lobby.js":7,"./login.js":8,"./nametag.js":9,"./natives.js":10,"./scaleforms/index.js":15,"./utils.js":16}],6:[function(require,module,exports){
 const CamerasManagerInfo = {
     gameplayCamera: null,
@@ -925,10 +927,19 @@ mp.events.add("Lobby:PreviewCam", (lobbyCam) => {
         }, 1100)
     }, 100)
 });
-mp.events.add("Lobby:WaitingUpdate", (lobbyData, timeTillStart) => {
+mp.events.add("Lobby:WaitingUpdate", (timeTillStart) => {
     if (mp.gpGameStarted == true) {
-        lobbyData = JSON.parse(lobbyData);
-        CEFBrowser.call("cef_waitingLobby", lobbyData, timeTillStart);
+        CEFBrowser.call("cef_waitingLobby", timeTillStart);
+    }
+});
+mp.events.add("Lobby:Scoreboard", (json_Scoreboar) => {
+    if (mp.gpGameStarted == true) {
+    	console.log("show scoreboard");
+
+    	//json_Scoreboar
+        //CEFBrowser.call("cef_waitingLobby", timeTillStart);
+    } else {
+    	//disable scoreboard
     }
 });
 /*Object Loading*/
@@ -962,8 +973,6 @@ mp.events.add("Server:RequestLogin", () => {
         camera2.pointAtCoord(-76.66345977783203, -818.8128051757812, 327.5135498046875);
         camera2.setActiveWithInterp(mp.defaultCam.handle, 60 * 1000 * 10, 0, 0);
         mp.defaultCam = camera2;
-        mp.game.streaming.setHdArea(-76.66345977783203, -818.8128051757812, 327.5135498046875, 327.5135498046875);
-        mp.game.streaming.loadScene(-76.66345977783203, -818.8128051757812, 327.5135498046875);
     }, 100);
 });
 

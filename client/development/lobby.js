@@ -109,10 +109,19 @@ mp.events.add("Lobby:PreviewCam", (lobbyCam) => {
         }, 1100)
     }, 100)
 });
-mp.events.add("Lobby:WaitingUpdate", (lobbyData, timeTillStart) => {
+mp.events.add("Lobby:WaitingUpdate", (timeTillStart) => {
     if (mp.gpGameStarted == true) {
-        lobbyData = JSON.parse(lobbyData);
-        CEFBrowser.call("cef_waitingLobby", lobbyData, timeTillStart);
+        CEFBrowser.call("cef_waitingLobby", timeTillStart);
+    }
+});
+mp.events.add("Lobby:Scoreboard", (json_Scoreboar) => {
+    if (mp.gpGameStarted == true) {
+    	console.log("show scoreboard");
+
+    	//json_Scoreboar
+        //CEFBrowser.call("cef_waitingLobby", timeTillStart);
+    } else {
+    	//disable scoreboard
     }
 });
 /*Object Loading*/

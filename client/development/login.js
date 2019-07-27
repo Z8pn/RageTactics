@@ -17,8 +17,6 @@ mp.events.add("Server:RequestLogin", () => {
         camera2.pointAtCoord(-76.66345977783203, -818.8128051757812, 327.5135498046875);
         camera2.setActiveWithInterp(mp.defaultCam.handle, 60 * 1000 * 10, 0, 0);
         mp.defaultCam = camera2;
-        mp.game.streaming.setHdArea(-76.66345977783203, -818.8128051757812, 327.5135498046875, 327.5135498046875);
-        mp.game.streaming.loadScene(-76.66345977783203, -818.8128051757812, 327.5135498046875);
     }, 100);
 });
 

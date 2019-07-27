@@ -48,3 +48,4 @@ mp.events.add('chatEnabled', (isEnabled) => {
 
 
 });
+
