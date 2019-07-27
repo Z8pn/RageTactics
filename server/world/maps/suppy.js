@@ -28,7 +28,7 @@ module.exports = {
    ],
    teams: [{
        name: "Team Marabunta Grande",
-       clothing: [
+       clothing: [ 
            {gender:0,componentNumber:11, drawable:189, texture:4, palette:0},
            {gender:0,componentNumber:8, drawable:0, texture:0, palette:0},
            {gender:0,componentNumber:7, drawable:50, texture:0, palette:0},

@@ -27,7 +27,7 @@ module.exports = {
 		    x:-2290.640 ,y:373.335 , z:171.601,
 			rx:0,
 			ry:0,
-			rz:0
+			rz:0 
 	},
 	{
 			model:"ng_proc_tyre_01",
