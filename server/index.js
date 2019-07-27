@@ -1,6 +1,6 @@
 //test
 var PlayerClass = require("./users/player.js")
-var LobbyManager = require("./users/lobby.js")
+var LobbyManager = require("./world/lobby.js")
 //var Gangwar = require("./users/gangwar.js")
 //var Weapons = require("./users/weapons.js")
 var Lobby = require("./users/lobby.js")
@@ -23,14 +23,13 @@ mp.events.add("playerQuit", function(player, exitType, reason) {
         if (player.interface.lobby) {
             LobbyManager.leaveLobby(player, player.interface.lobby);
         }
+        players[player_id].save().then(function() {
 
-
-
-
-
+            console.log("saved");
+        })
 
         players[player_id] = null;
-        console.log("Data Saving")
+        console.log(`${player.name} disconnected Reason ${exitType}`)
         
     }
 });
@@ -55,12 +54,12 @@ mp.events.add("ServerAccount:Register", function(player, username, password) {
 
 
 var fs = require("fs");
-var saveFile = "savedpos.txt";
-mp.events.addCommand("savepos", (player, name = "No name") => {
+var saveFile = "tactics_save.txt";
+mp.events.addCommand("spos", (player) => {
     let pos = (player.vehicle) ? player.vehicle.position : player.position;
     let rot = (player.vehicle) ? player.vehicle.rotation : player.heading;
-    rot = (player.vehicle) ? `${rot.x}, ${rot.y}, ${rot.z}` : player.heading
-    fs.appendFile(saveFile, `${pos.x}, ${pos.y}, ${pos.z}, ${rot}\r\n`, (err) => {
+    rot = (player.vehicle) ? `rx:${rot.x}, ry:${rot.y}, rz:${rot.z}` : player.heading
+    fs.appendFile(saveFile, `x:${pos.x}, y:${pos.y}, z:${pos.z}, ${rot}\r\n`, (err) => {
         if (err) {
             player.notify(`~r~SavePos Error: ~w~${err.message}`);
         } else {

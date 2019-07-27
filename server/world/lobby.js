@@ -1,5 +1,5 @@
-var MapManager = require("../world/MapManager.js")
-var HUB = require("../world/hub.js")
+var MapManager = require("./MapManager.js")
+var HUB = require("./hub.js")
 var e = require('../libs/enums.js');
 var NumberManager = new class {
 	constructor() {
@@ -85,6 +85,7 @@ var TeamElimination = class {
 	}
 	set host(player) {
 		this._host = player;
+		player.setVariable("host", this._id);
 	}
 	get host() {
 		return this._host;
@@ -174,7 +175,7 @@ var TeamElimination = class {
 	get id() {
 		return this._id;
 	}
-	set map(mapName) {
+	setMap(mapName) {
 		let map = MapManager.getMapData(mapName);
 		console.log("set map", map)
 		if (map) {
@@ -187,6 +188,7 @@ var TeamElimination = class {
 			this._previewCam = map.previewCam;
 			this.weapons = map.weapons;
 			console.log("set lobby to " + mapName);
+			return e.LOBBY_MAP_FOUND;
 		} else {
 			return e.LOBBY_MAP_NOT_FOUND
 		}
@@ -205,7 +207,8 @@ var TeamElimination = class {
 	}
 	get teams() {
 		let temp_teams = this._teams.map(e => {
-			let t = { ...e };
+			let t = { ...e
+			};
 			t.players = 0;
 			return t;
 		});
@@ -213,6 +216,11 @@ var TeamElimination = class {
 			temp_teams[player.team].players += 1;
 		});
 		return temp_teams;
+	}
+	mapScoreboard() {
+
+
+
 	}
 	update_status() {
 		let self = this;
@@ -247,6 +255,7 @@ var TeamElimination = class {
 	tick() {
 		let self = this;
 		self.update_status();
+		self.mapScoreboard();
 		let tPlayerNames = [];
 		if (self.status == e.LOBBY_WAITING) {
 			self._teams.forEach(function(e, i) {
@@ -296,21 +305,24 @@ var TeamElimination = class {
 					player.ready = 1;
 					player.client.dimension = self._dim;
 					player.client.setVariable("current_status", "cam");
-					player.client.call("GP:LobbyCam", [JSON.stringify(self._previewCam)]);
+					player.client.call("Lobby:PreviewCam", [JSON.stringify(self._previewCam)]);
 					player.client.call("Lobby:LoadObjects", [self.id, JSON.stringify(self.objects)]);
 				} else {
 					player.client.call("GP:Ping");
 				}
 				if (self.status == e.LOBBY_WAITING) {
-					player.client.call("GP:LobbyUpdate", [JSON.stringify(tPlayerNames), self._lobbyWaitCooldown]);
+					player.client.call("Lobby:WaitingUpdate", [JSON.stringify(tPlayerNames), self._lobbyWaitCooldown]);
 				}
 			})
 			if (self.status == e.LOBBY_NEW_ROUND) {
 				self._teamsDead = [];
 				self.players.forEach(function(player) {
-					if (player.ready == 1) {
+					player.client.dimension = self._dim;
+					player.client.setVariable("current_status", "cam");
+					player.client.call("Lobby:PreviewCam", [JSON.stringify(self._previewCam)]);
+					/*if (player.ready == 1) {
 						player.ready = 0;
-					}
+					}*/
 				});
 				console.log(" new round ")
 				self.status = e.LOBBY_NEW_ROUND_STARTING;
@@ -321,7 +333,7 @@ var TeamElimination = class {
 					self.players.forEach(function(player) {
 						if (player.ready == 1) {
 							player.client.setVariable("current_status", "cam");
-							player.client.call("GP:LobbyCam", [JSON.stringify(self._previewCam)]);
+							player.client.call("Lobby:PreviewCam", [JSON.stringify(self._previewCam)]);
 						}
 					});
 				}
@@ -338,38 +350,38 @@ var TeamElimination = class {
 				console.log("prepare()");
 			} else if (self.status == e.LOBBY_COUNTDOWN) {
 				self.players.forEach(function(player) {
-					player.client.call("GP:ScaleForm", ["Starting...", self.round]);
+					player.client.call("Lobby:Countdown", ["Starting...", self.round]);
 				});
 				self.status = e.LOBBY_COUNTDOWN_5;
 			} else if (self.status == e.LOBBY_COUNTDOWN_5) {
 				self.players.forEach(function(player) {
-					player.client.call("GP:ScaleForm", ["5", self.round]);
+					player.client.call("Lobby:Countdown", ["5", self.round]);
 				});
 				self.status = e.LOBBY_COUNTDOWN_4;
 			} else if (self.status == e.LOBBY_COUNTDOWN_4) {
 				self.players.forEach(function(player) {
-					player.client.call("GP:ScaleForm", ["4", self.round]);
+					player.client.call("Lobby:Countdown", ["4", self.round]);
 				});
 				self.status = e.LOBBY_COUNTDOWN_3;
 			} else if (self.status == e.LOBBY_COUNTDOWN_3) {
 				self.players.forEach(function(player) {
-					player.client.call("GP:ScaleForm", ["3", self.round]);
+					player.client.call("Lobby:Countdown", ["3", self.round]);
 				});
 				self.status = e.LOBBY_COUNTDOWN_2;
 			} else if (self.status == e.LOBBY_COUNTDOWN_2) {
 				self.players.forEach(function(player) {
-					player.client.call("GP:ScaleForm", ["2", self.round]);
+					player.client.call("Lobby:Countdown", ["2", self.round]);
 				});
 				self.status = e.LOBBY_COUNTDOWN_1;
 			} else if (self.status == e.LOBBY_COUNTDOWN_1) {
 				self.players.forEach(function(player) {
-					player.client.call("GP:ScaleForm", ["1", self.round]);
+					player.client.call("Lobby:Countdown", ["1", self.round]);
 				});
 				self.status = e.LOBBY_COUNTDOWN_GO;
 			} else if (self.status == e.LOBBY_COUNTDOWN_GO) {
 				self.status = e.LOBBY_RUNNING;
 				self.players.forEach(function(player) {
-					player.client.call("GP:ScaleForm", ["Go!", self.round]);
+					player.client.call("Lobby:Countdown", ["Go!", self.round]);
 				});
 				self.start();
 			}
@@ -408,7 +420,7 @@ var TeamElimination = class {
 							e.client.interface.setEquipment(self.weapons);
 							e.client.setVariable("team", team);
 							e.client.setVariable("current_status", "cam");
-							e.client.call("GP:StartCam");
+							e.client.call("Lobby:StartCam");
 							e.client.dimension = self._dim;
 						} else {
 							self.reset();
@@ -547,6 +559,15 @@ var TeamElimination = class {
 					self.end(killer.team);
 				}
 			}
+			let otherTeammates = this.players.filter(player => {
+				return player.team == victim.team && player != victim;
+			}).map(e => {
+				return e.client;
+			})
+			if (otherTeammates) {
+				console.log("can spectate", otherTeammates);
+				victim_ref.call("GP:Spectatable", [otherTeammates, /*Only show FOV*/ , true])
+			}
 		}
 	}
 	getPlayer(player) {
@@ -607,19 +628,20 @@ var TeamElimination = class {
 let TestLobby1 = new TeamElimination();
 setTimeout(function() {
 	TestLobby1.name = "TestLobby1";
-	TestLobby1.map = "LS Supply";
+	TestLobby1.setMap("LS Supply");
 	TestLobby1.MaxRounds = 5;
 }, 1000)
 let TestLobby2 = new TeamElimination();
 setTimeout(function() {
 	TestLobby2.name = "TestLobby2";
-	TestLobby2.map = "Korz Center";
+	TestLobby2.setMap("Korz Center");
 	TestLobby2.MaxRounds = 3;
 }, 1000)
 let TestLobby3 = new TeamElimination();
 setTimeout(function() {
 	TestLobby3.name = "TestLobby3";
-	TestLobby3.map = "Hafen";
+	TestLobby3.setMap("Hafen");
+	TestLobby3.MaxRounds = 1;
 }, 1000)
 var LobbyManager = new class {
 	constructor() {
@@ -654,7 +676,34 @@ var LobbyManager = new class {
 		console.log("TODO getLobbyPlayerIsIn(lobby.js)")
 		return;
 	}
-	createLobby(map) {}
+	createLobby(player, lobby_data) {
+		let lobby;
+		if (lobby_data.gamemode = "tem") {
+			lobby = new TeamElimination();
+			lobby.name = lobby_data.lobby_name;
+			let map_valid = lobby.setMap(lobby_data.map_name);
+			if (map_valid == e.LOBBY_MAP_FOUND) {
+				lobby.round_duration = lobby_data.round_duration;
+				lobby.MaxRounds = lobby_data.max_rounds;
+			}
+		}
+		if (lobby) {
+			self._lobbies.push(lobby);
+			return {
+				name: lobby.name,
+				image: lobby.image,
+				id: lobby.id,
+				players: lobby.player_count,
+				max_players: lobby.max_players,
+				map: lobby.map,
+				status: lobby.status,
+				teams: lobby.teams,
+				rounds: lobby.MaxRound,
+				mode: lobby.mode
+			};
+		}
+		return false;
+	}
 	deleteLobby(id) {
 		let self = this;
 		console.log("TODO DELETE LOBBY", id);
@@ -731,7 +780,6 @@ var LobbyManager = new class {
 		}
 	}
 }
-
 mp.events.add("LobbyManager:LoadingFinished", function(player, lID) {
 	if (player.interface) {
 		console.log("LobbyManager:LoadingFinished");
