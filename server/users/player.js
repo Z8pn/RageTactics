@@ -1,6 +1,6 @@
 var MongoDB = require("../libs/mongodb.js")
 var Damage = require("./damage.js")
-var LobbyManager = require("./lobby.js")
+var LobbyManager = require("../world/lobby.js")
 //var Weapons = require("./weapons.js")
 var MapManager = require("../world/MapManager.js")
 var HUB = require("../world/hub.js")
@@ -28,6 +28,13 @@ var Player = class {
         self._gender = 0;
         self._curLobby = -1;
         this._player.setVariable("lobby_id", 0);
+    }
+    save() {
+        let self = this;
+        return new Promise((fulfill, reject) => {
+
+            return fulfill();
+        })
     }
     log(...args) {
         console.log("Account:Log", args)
