@@ -37,6 +37,7 @@ var enums = {
     LOBBY_JOIN_FAIL_TEAM_FULL:enum_count++,
     LOBBY_PLAYER_NOT_FOUND:enum_count++,
     LOBBY_MAP_NOT_FOUND:enum_count++,
+    LOBBY_MAP_FOUND:enum_count++,
 }
 Object.keys(enums).forEach(function(key, value) {
 	global[key] = enums[key];
