@@ -35,6 +35,7 @@ var MapManager = class {
 				objects: map.objects || [],
 				weapons: map.weapons || [],
 				previewCam: map.previewCam || {},
+				mode: map.mode || undefined,
 				teams: map.teams || [{
 					name: "Team 1",
 					clothing: []
@@ -56,6 +57,7 @@ var MapManager = class {
 		let temp_map = require("./maps/" + fileName);
 		if (temp_map.spawns.length >= temp_map.max_players) {
 			self._loadedMaps[fileName.replace(".js", "")] = {
+				mode: temp_map.mode,
 				name: temp_map.name,
 				objects: temp_map.objects,
 				spawns: temp_map.spawns,
@@ -79,7 +81,6 @@ var MapManager = class {
 				console.log("loading..");
 				if (map.indexOf(".js") > -1) {
 					if (self.isMapLoaded(map) == false) {
-						console.log(map);
 						self.loadMap(map);
 					}
 				}

@@ -1,4 +1,5 @@
 module.exports = {
+   mode:"Team Elimination",
    name: "LS Supply",
    objects: [],
    spawns: [

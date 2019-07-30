@@ -1,4 +1,5 @@
 module.exports = {
+	mode:"Team Elimination",
 	name: "Korz Center",
 	objects: [
 	{
