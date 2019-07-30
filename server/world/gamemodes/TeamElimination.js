@@ -310,10 +310,10 @@ class TeamElimination extends BaseTeamGamemode {
 		})
 		if (((self.MaxRound - self.round) > 0) && (isGameOver == false)) {
 			self.status = e.LOBBY_NEW_ROUND;
-			self.notify("Round Over", self.winner.name + " won this round\nScore:\n" + sub_string,11000);
+			self.notify("Round Over", self.winner != undefined ? self.winner.name : "Error" + " won this round\nScore:\n" + sub_string,11000);
 		} else {
 			self.status = e.LOBBY_CLOSING;
-			self.notify("Game Over", self.winner.name + " won\nScore:" + sub_string,10*60*1000);
+			self.notify("Game Over", self.winner != undefined ? self.winner.name : "Error"  + " won\nScore:" + sub_string,10*60*1000);
 		}
 	}
 	killed(victim, killer) {
