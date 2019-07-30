@@ -12,18 +12,18 @@ var path = require('path');
 var ncp = require('ncp').ncp;
 var watch = require('node-watch');
 var prependFile = require('prepend-file');
-let source_server = "Q:/RageMP/RageTactics/server"
-let dest_server = "A:/RAGEMP/server-files/packages/RageTactics"
-var cp_text = `* Copyright (C) Z8pn - All Rights Reserved\n* Unauthorized copying of this file, via any medium is strictly prohibited\n* Written by Z8pn <mail@z8pn.com>, ${new Date().yyyymmdd()}`
+let source_server = "Q:/RageMP/RageTactics/server";
+let dest_server = "A:/RAGEMP/server-files/packages/RageTactics";
+var cp_text = `* Copyright (C) Z8pn - All Rights Reserved\n* Unauthorized copying of this file, via any medium is strictly prohibited\n* Written by Z8pn <mail@z8pn.com>, ${new Date().yyyymmdd()}`;
 var cp_snipped_js = `/* 
 ${cp_text}
-*/\n`
+*/\n`;
 var cp_snipped_css = `/* 
 ${cp_text}
-*/\n`
+*/\n`;
 var cp_snipped_html = `<!-- 
 ${cp_text} 
--->\n`
+-->\n`;
 ncp(source_server, dest_server, function(err) {
     if (err) {
         return console.error(err);
@@ -44,9 +44,9 @@ watch('./server', {
         }
     });
 });
-let source_client = "Q:/RageMP/RageTactics/client"
-let dest_client = "A:/RAGEMP/server-files/client_packages/RageTactics"
-let exclude = "development"
+let source_client = "Q:/RageMP/RageTactics/client";
+let dest_client = "A:/RAGEMP/server-files/client_packages/RageTactics";
+let exclude = "development";
 ncp(source_client, dest_client, function(err) {
     if (err) {
         return console.error(err);
