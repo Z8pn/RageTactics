@@ -78,16 +78,16 @@ function GP_CheckConnectivity() {
                 mp.game.graphics.transitionToBlurred(1);
             }
         }
-    } //else {
-    if (mp.players.local.getVariable("spawned")) {
-        LB_Updates++;
-        if (LB_Updates > 5) {
-            LB_Updates = 0;
-            console.log("request lobby");
-            mp.events.callRemote("User:RequestLobby");
+    } else {
+        if (mp.players.local.getVariable("spawned")) {
+            LB_Updates++;
+            if (LB_Updates > 5) {
+                LB_Updates = 0;
+                console.log("request lobby");
+                mp.events.callRemote("User:RequestLobby");
+            }
         }
     }
-    //}
 }
 setInterval(function() {
     GP_CheckConnectivity();
