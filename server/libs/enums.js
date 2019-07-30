@@ -1,5 +1,8 @@
 let enum_count = 1;
 var enums = {
+    AUTO_BALANCE:enum_count++,
+    NO_BALANCE:enum_count++,
+    LOBBY_BALANCE_ERR:enum_count++,
     LOBBY_CREATING:enum_count++,
     LOBBY_WAITING:enum_count++,
     LOBBY_READY:enum_count++,
@@ -38,6 +41,7 @@ var enums = {
     LOBBY_PLAYER_NOT_FOUND:enum_count++,
     LOBBY_MAP_NOT_FOUND:enum_count++,
     LOBBY_MAP_FOUND:enum_count++,
+    LOBBY_MAP_MODE_INVALID:enum_count++,
 }
 Object.keys(enums).forEach(function(key, value) {
 	global[key] = enums[key];

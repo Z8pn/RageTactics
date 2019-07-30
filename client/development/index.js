@@ -1,6 +1,16 @@
 "use strict";
 
 
+mp.events.add("entityStreamIn", (entity) =>    
+{
+   if(entity.streamInHandler)
+   {
+       entity.streamInHandler(entity);
+   }
+});
+
+
+
 mp.gameplayCam = mp.cameras.new('gameplay');
 mp.defaultCam = mp.cameras.new('default');
 console.log = function(...a) {
@@ -10,6 +20,7 @@ console.log = function(...a) {
     mp.gui.chat.push("DeBuG:" + a.join(" "))
 };
 require("./utils.js")
+require("./anticheat.js")
 require("./scaleforms/index.js");
 
 

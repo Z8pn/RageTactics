@@ -14,6 +14,8 @@ mp.events.add("ServerAccount:Ready", function(player) {
     player.position.x = 9000;
     player.position.y = 9000;
 });
+
+       
 mp.events.add("playerQuit", function(player, exitType, reason) {
     console.log("disconnect", exitType, reason)
     if (players[player.id]) {

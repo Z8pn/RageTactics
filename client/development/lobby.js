@@ -78,8 +78,8 @@ mp.events.add("Lobby:StartCam", () => {
         }, 3500);
     }, 1000);
 });
-mp.events.add("Lobby:Countdown", (time, round) => {
-    mp.game.ui.messages.showShard(time, "Round " + round, 1, 0, 2000);
+mp.events.add("Lobby:ShardMessage", (string, substring) => {
+    mp.game.ui.messages.showShard(string, substring, 1, 0, 2000);
 });
 mp.events.add("Lobby:PreviewCam", (lobbyCam) => { 
     mp.gpGameStarted = true;

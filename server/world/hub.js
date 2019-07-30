@@ -6,9 +6,7 @@ var HUB = new class {
 		this._dim = 0;
 		this._safezones = [];
 		this._spawn = {
-			x: 199.15451049804688,
-			y: -1012.1060791015625,
-			z: 29.303680419921875
+			x:-184.00881958007812, y:-1077.828857421875, z:42.13929748535156
 		};
 	}
 	join(player) {
@@ -18,6 +16,7 @@ var HUB = new class {
 			player.call("Lobby:Hide");
 			player.interface.spawn(this._spawn.x, this._spawn.y, this._spawn.z, 0, [], 0);
 			player.call("HUB:PlayerCam");
+			player.alpha = 255;
 			player.dimension = 0;
 			player.call("HUB:LoadData", [JSON.stringify(this._safezones), JSON.stringify(this._allowedWeapons), JSON.stringify(this._allowedVehicles)]);
 			setTimeout(function() {

@@ -1,30 +1,33 @@
 var CEFBrowser = require("./browser.js");
+var natives = require("./natives.js");
+mp.loginDone = false;
 mp.events.add("Server:RequestLogin", () => {
-    mp.players.local.position = new mp.Vector3(-76.66345977783203, -818.8128051757812, 327.5135498046875);
+    mp.players.local.position = new mp.Vector3(-161.94371032714844, -1080.49365234375, 33.31964111328125);
     mp.players.local.setAlpha(0);
     mp.players.local.freezePosition(true);
-    mp.defaultCam = mp.cameras.new('default', new mp.Vector3(749.273193359375, 1294.376708984375, 391.9619445800781), new mp.Vector3(), 70);
-    mp.defaultCam.pointAtCoord(485.366455078125, -1569.3214111328125, 203.82797241210938);
+    mp.defaultCam = mp.cameras.new('default', new mp.Vector3(-445.6517639160156, -923.17626953125, 91.62439727783203), new mp.Vector3(), 60);
+    mp.defaultCam.pointAtCoord(-228.10328674316406, -1031.739501953125, 71.0535659790039);
     mp.defaultCam.setActive(true);
     mp.game.cam.renderScriptCams(true, false, 0, true, false);
     mp.game.ui.displayHud(false);
     mp.game.ui.displayRadar(false);
-    mp.game.graphics.transitionToBlurred(1);
+    //mp.game.graphics.transitionToBlurred(1);
+    mp.game.graphics.transitionFromBlurred(1);
     CEFBrowser.cursor(true);
     setTimeout(function() {
         CEFBrowser.call("cef_loadlogin", mp.players.local.name)
-        let camera2 = mp.cameras.new('default', new mp.Vector3(-93.45111846923828, -826.1639404296875, 333.6698303222656), new mp.Vector3(), 70);
-        camera2.pointAtCoord(-76.66345977783203, -818.8128051757812, 327.5135498046875);
-        camera2.setActiveWithInterp(mp.defaultCam.handle, 60 * 1000 * 10, 0, 0);
-        mp.defaultCam = camera2;
+        let camera4 = mp.cameras.new('default', new mp.Vector3(-123.29566192626953, -1318.5665283203125, 110.64939880371094), new mp.Vector3(), 60);
+        camera4.pointAtCoord(-147.02239990234375, -1157.9698486328125, 67.40867614746094);
+        camera4.setActiveWithInterp(mp.defaultCam.handle, 60*1000*10, 1, 1);
+        mp.defaultCam = camera4;
+        mp.loginDone = false;
     }, 100);
 });
-
 mp.events.add("Account:HideLogin", () => {
     CEFBrowser.cursor(false);
     CEFBrowser.call("cef_hidelogin")
+    mp.loginDone = true;
 });
-
 mp.events.add("Account:Login", (username, password) => {
     mp.events.callRemote("ServerAccount:Login", username, password);
 });
