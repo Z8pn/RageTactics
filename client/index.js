@@ -1016,16 +1016,16 @@ function GP_CheckConnectivity() {
                 mp.game.graphics.transitionToBlurred(1);
             }
         }
-    } //else {
-    if (mp.players.local.getVariable("spawned")) {
-        LB_Updates++;
-        if (LB_Updates > 5) {
-            LB_Updates = 0;
-            console.log("request lobby");
-            mp.events.callRemote("User:RequestLobby");
+    } else {
+        if (mp.players.local.getVariable("spawned")) {
+            LB_Updates++;
+            if (LB_Updates > 5) {
+                LB_Updates = 0;
+                console.log("request lobby");
+                mp.events.callRemote("User:RequestLobby");
+            }
         }
     }
-    //}
 }
 setInterval(function() {
     GP_CheckConnectivity();
@@ -1059,7 +1059,7 @@ mp.events.add('render', (nametags) => {
 		mp.gpGameStarted = false;
 	}
 	if (mp.players.local.getVariable("current_status") == "cam") {
-		mp.game.controls.disableAllControlActions(0);
+		mp.game.controls.disableAllControlActions(2);
 	}
 });
 var LobbyState = false;
@@ -1103,8 +1103,8 @@ mp.events.add("HUB:PlayerCam", () => {
 					mp.game.cam.doScreenFadeIn(500);
 				}, 200)
 			}, 3500);
-		}, 1100)
-	}, 100)
+		}, 1100);
+	}, 100);
 });
 },{}],9:[function(require,module,exports){
 "use strict";
@@ -1118,7 +1118,8 @@ mp.events.add("entityStreamIn", (entity) =>
    }
 });
 
-
+mp.game.vehicle.setRandomTrains(true) 
+mp.game.vehicle.setRandomBoats(true) 
 
 mp.gameplayCam = mp.cameras.new('gameplay');
 mp.defaultCam = mp.cameras.new('default');
@@ -1415,8 +1416,8 @@ mp.events.add("Lobby:StartCam", () => {
         }, 3500);
     }, 1000);
 });
-mp.events.add("Lobby:ShardMessage", (string, substring) => {
-    mp.game.ui.messages.showShard(string, substring, 1, 0, 2000);
+mp.events.add("Lobby:ShardMessage", (string, substring,time = 2000) => {
+    mp.game.ui.messages.showShard(string, substring, 1, 0, time);
 });
 mp.events.add("Lobby:PreviewCam", (lobbyCam) => { 
     mp.gpGameStarted = true;
@@ -2041,5 +2042,26 @@ mp.game.graphics.drawSpriteAbsolute = function(textureDict, textureName, screenX
     scaleX = 1.0 / 2560 * scaleX;
     scaleY = 1.0 / 1440 * scaleY;
     return mp.game.graphics.drawSprite(textureDict, textureName, screenX, screenY, scaleX, scaleY, heading, colorR, colorG, colorB, alpha);
+}
+
+mp.game.graphics.getMinimapAnchor = () => {
+    let sfX = 1.0 / 20.0;
+    let sfY = 1.0 / 20.0;
+    let safeZone = mp.game.graphics.getSafeZoneSize();
+    let aspectRatio = mp.game.graphics.getScreenAspectRatio(false);
+    let resolution = mp.game.graphics.getScreenActiveResolution(0, 0);
+    let scaleX = 1.0 / resolution.x;
+    let scaleY = 1.0 / resolution.y;
+    let minimap = {
+        width: scaleX * (resolution.x / (4 * aspectRatio)),
+        height: scaleY * (resolution.y / 5.674),
+        scaleX: scaleX,
+        scaleY: scaleY,
+        leftX: scaleX * (resolution.x * (sfX * (Math.abs(safeZone - 1.0) * 10))),
+        bottomY: 1.0 - scaleY * (resolution.y * (sfY * (Math.abs(safeZone - 1.0) * 10))),
+    };
+    minimap.rightX = minimap.leftX + minimap.width;
+    minimap.topY = minimap.bottomY - minimap.height;
+    return minimap;
 }
 },{}]},{},[9]);
