@@ -22,7 +22,7 @@ mp.events.add('render', (nametags) => {
 		mp.gpGameStarted = false;
 	}
 	if (mp.players.local.getVariable("current_status") == "cam") {
-		mp.game.controls.disableAllControlActions(0);
+		mp.game.controls.disableAllControlActions(2);
 	}
 });
 var LobbyState = false;
@@ -66,6 +66,6 @@ mp.events.add("HUB:PlayerCam", () => {
 					mp.game.cam.doScreenFadeIn(500);
 				}, 200)
 			}, 3500);
-		}, 1100)
-	}, 100)
+		}, 1100);
+	}, 100);
 });

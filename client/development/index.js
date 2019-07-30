@@ -9,7 +9,8 @@ mp.events.add("entityStreamIn", (entity) =>
    }
 });
 
-
+mp.game.vehicle.setRandomTrains(true) 
+mp.game.vehicle.setRandomBoats(true) 
 
 mp.gameplayCam = mp.cameras.new('gameplay');
 mp.defaultCam = mp.cameras.new('default');
