@@ -1,7 +1,1 @@
-"{
-\"disable\":\"css\",
-\"ignore\":\"client/cef/\"
-
-
-
-}"
+"{\"disable\":[\"css\"],\"ignore\":[\"client/cef/\"]}"
