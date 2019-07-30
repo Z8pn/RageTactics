@@ -99,7 +99,7 @@ module.exports = {
 		{hash:mp.joaat("weapon_carbinerifle_mk2"),ammo:300}
 	],
 	teams: [{
-		name: "Team Yakuza",
+		name: "Yakuza",
 		clothing: [
 			{gender:0,componentNumber:11, drawable:107, texture:2, palette:0},
 			{gender:0,componentNumber:8, drawable:15, texture:0, palette:0},
@@ -110,7 +110,7 @@ module.exports = {
 		],
 		max:8
 	}, {
-		name: "Team LCN",
+		name: "Die Gilde",
 		clothing: [
 			{gender:0,componentNumber:11, drawable:53, texture:0, palette:0},
 			{gender:0,componentNumber:8, drawable:16, texture:0, palette:0},

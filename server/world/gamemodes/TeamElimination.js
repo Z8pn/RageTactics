@@ -1,15 +1,20 @@
 var BaseTeamGamemode = require("./base.js");
+
 var e = require('../../libs/enums.js');
+
+
+
 class TeamElimination extends BaseTeamGamemode {
 	constructor() {
 		super("Team Elimination");
+
 	}
 	balanced() {
 		let mode = this._balance;
 		if (mode == e.AUTO_BALANCE) {
 			let most_player_team = undefined;
 			let most_players = 0;
-			this.team.forEach(function(team, index) {
+			this.teams.forEach(function(team, index) {
 				let t_players = team.players;
 				if (t_players > most_players) {
 					most_players = t_players
@@ -18,7 +23,7 @@ class TeamElimination extends BaseTeamGamemode {
 			})
 			return most_player_team;
 		} else if (mode == e.NO_BALANCE) {
-			return true;
+			return e.BALANCE_OK;
 		}
 	}
 	addPointToTeam(team) {
@@ -65,7 +70,8 @@ class TeamElimination extends BaseTeamGamemode {
 		if ((self.player_count == 0) && (self.status == e.LOBBY_RUNNING)) {
 			if (!self._idleTick) self._idleTick = 0;
 			self._idleTick += 1;
-			if (self._idleTick > 120) LobbyManager.clear(self.id);
+			if (self._idleTick > 120) 
+					mp.events.call("LobbyManager:deleteLobby",self.id);//LobbyManager.deleteLobby(self.id);
 		}
 		if (self.status == e.LOBBY_CREATING) {
 			console.log("LOBBY WAITING");
@@ -159,36 +165,43 @@ class TeamElimination extends BaseTeamGamemode {
 				}
 				self._closingTime -= 1;
 				console.log(self._closingTime);
+
+				if (self._closingTime == 1) {
+
+					self.notify("Lobby closing...","",5000);
+				}
 				if (self._closingTime == 0) {
 					self._closingTime = undefined;
 					console.log("LOBBY_ENDING");
+					//LobbyManager.deleteLobby(self.id);
+					mp.events.call("LobbyManager:deleteLobby",self.id);
+					console.log("LOBBY_ENDED");
 					self.status = e.LOBBY_CLOSED;
-					LobbyManager.deleteLobby(self.id);
 				}
 			} else if (self.status == e.LOBBY_STARTING) {
 				self.prepare();
 				console.log("prepare()");
 			} else if (self.status == e.LOBBY_COUNTDOWN) {
-				self.notify("Starting...", "Round " + self.round);
+				self.notify("Starting...", "Round " + self.round,2000);
 				self.status = e.LOBBY_COUNTDOWN_5;
 			} else if (self.status == e.LOBBY_COUNTDOWN_5) {
-				self.notify("5", "Round " + self.round);
+				self.notify("5", "Round " + self.round,2000);
 				self.status = e.LOBBY_COUNTDOWN_4;
 			} else if (self.status == e.LOBBY_COUNTDOWN_4) {
-				self.notify("4", "Round " + self.round);
+				self.notify("4", "Round " + self.round,2000);
 				self.status = e.LOBBY_COUNTDOWN_3;
 			} else if (self.status == e.LOBBY_COUNTDOWN_3) {
-				self.notify("3", "Round " + self.round);
+				self.notify("3", "Round " + self.round,2000);
 				self.status = e.LOBBY_COUNTDOWN_2;
 			} else if (self.status == e.LOBBY_COUNTDOWN_2) {
-				self.notify("2", "Round " + self.round);
+				self.notify("2", "Round " + self.round,2000);
 				self.status = e.LOBBY_COUNTDOWN_1;
 			} else if (self.status == e.LOBBY_COUNTDOWN_1) {
-				self.notify("1", "Round " + self.round);
+				self.notify("1", "Round " + self.round,2000);
 				self.status = e.LOBBY_COUNTDOWN_GO;
 			} else if (self.status == e.LOBBY_COUNTDOWN_GO) {
 				self.status = e.LOBBY_RUNNING;
-				self.notify("Go!", "Round " + self.round);
+				self.notify("Go!", "Round " + self.round,1000);
 				self.start();
 			}
 		}
@@ -272,34 +285,35 @@ class TeamElimination extends BaseTeamGamemode {
 		}
 	}
 	end(winningTeam) {
+		let self = this;
 		console.log("round enderino winner", winningTeam);
 		//calc game score
 		if (winningTeam != undefined) {
-			let winningTeamArr = this.teams.find(function(e, i) {
+			let winningTeamArr = self.teams.find(function(e, i) {
 				return winningTeam == i;
 			});
 			if (winningTeamArr) {
 				this.addPointToTeam(winningTeamArr.name);
 			}
-		} else if (winningTeam == undefined) {
+		} else  {
 			console.log("calculate points by kills");
 		}
-		console.log("SCORE", this.score);
+		console.log("SCORE", self.score);
 		//calc game score
-		this.roundreport();
-		let isGameOver = this.isOver();
-		mp.players.broadcast(`Winner :${this.winner.name}`);
+		self.roundreport();
+		let isGameOver = self.isOver();
+		//mp.players.broadcast(`Winner :${this.winner.name}`);
 		console.log("isGameOver", isGameOver);
 		let sub_string = "";
-		this.score.forEach(function(s, t) {
-			sub_string += t + ":" + s + "\n";
+		Object.keys(self.score).forEach(function(s, t) {
+			sub_string += s + " : " + self.score[s] + "\n";
 		})
-		if (((this.MaxRound - this.round) > 0) && (isGameOver == false)) {
-			this.status = e.LOBBY_NEW_ROUND;
-			this.notify("Round Over", this.winner.name + " won this round\nScore:" + sub_string);
+		if (((self.MaxRound - self.round) > 0) && (isGameOver == false)) {
+			self.status = e.LOBBY_NEW_ROUND;
+			self.notify("Round Over", self.winner.name + " won this round\nScore:\n" + sub_string,11000);
 		} else {
-			this.status = e.LOBBY_CLOSING;
-			this.notify("Game Over", this.winner.name + " won\nScore:" + sub_string);
+			self.status = e.LOBBY_CLOSING;
+			self.notify("Game Over", self.winner.name + " won\nScore:" + sub_string,10*60*1000);
 		}
 	}
 	killed(victim, killer) {

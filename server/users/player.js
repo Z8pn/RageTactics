@@ -46,13 +46,14 @@ var Player = class {
         this._gender = data.gender;
         console.log("load db data");
     }
-    addDamage(attacker_id, weapon, damage, bodypart) {
-        console.log("addDamage", attacker_id, weapon, damage, bodypart);
+    addDamage(attacker_id, weapon, damage, bodypart,tick) {
+        console.log("addDamage", attacker_id, weapon, damage, bodypart,tick);
         this._damage.push({
             attacker_id: attacker_id,
             weapon: weapon,
             damage: damage,
-            bodypart: bodypart
+            bodypart: bodypart,
+            game_tick: tick
         })
     }
     set lobby(id) {
@@ -161,7 +162,16 @@ var Player = class {
             }
             self._player.call("Combat:Hitted", [damage]);
             attacker.call("Combat:Hit", [damage]);
-            self.addDamage(attacker.interface.id, weapon, damage, bodypart)
+
+
+            let game_tick = -1;
+            let lobby = LobbyManager.getLobbyByID(this.lobby);
+            if (lobby) {
+                game_tick = lobby.gameTick;
+            }
+
+
+            self.addDamage(attacker.interface.id, weapon, damage, bodypart,game_tick)
             if ((self.health <= 0) && (self.isDead() == 0)) {
                 self.death(attacker, weapon, bodypart);
             }
@@ -247,6 +257,10 @@ var Player = class {
     }
     register(username, password) {
         var self = this;
+        if (!self._loggingInProgress)
+            return;
+
+        self._loggingInProgress = true;
         self.log("register request", username, password)
         User.register(self._player, username, password, function(err, result) {
             if (!err) {
@@ -271,6 +285,10 @@ var Player = class {
     }
     login(username, password) {
         var self = this;
+        if (!self._loggingInProgress)
+            return;
+
+        self._loggingInProgress = true;
         self.log("Login request")
         User.login(username, password, function(err, result) {
             if (!err) {

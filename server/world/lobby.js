@@ -2,20 +2,19 @@ var MapManager = require("./MapManager.js")
 var HUB = require("./hub.js")
 var e = require('../libs/enums.js');
 var TeamElimination = require("./gamemodes/TeamElimination.js")
-
-
 let TestLobby1 = new TeamElimination();
 setTimeout(function() {
 	TestLobby1.name = "TestLobby1";
 	TestLobby1.setMap("LS Supply");
-	TestLobby1.MaxRounds = e.AUTO_BALANCE;
+	TestLobby1.MaxRounds = 5;
+	TestLobby1.balance = e.AUTO_BALANCE;
 }, 1000)
 let TestLobby2 = new TeamElimination();
 setTimeout(function() {
 	TestLobby2.name = "TestLobby2";
 	TestLobby2.setMap("Korz Center");
 	TestLobby2.MaxRounds = 3;
-	TestLobby3.balance = e.NO_BALANCE;
+	TestLobby2.balance = e.NO_BALANCE;
 }, 1000)
 let TestLobby3 = new TeamElimination();
 setTimeout(function() {
@@ -46,11 +45,11 @@ var LobbyManager = new class {
 				players: e.player_count,
 				max_players: e.max_players,
 				map: e.map,
-				status: e.status,
+				status: "translate:" + e.status,
 				teams: e.teams,
 				rounds: e.MaxRound,
 				mode: e.mode,
-				balance:e.balance
+				balance: e.balance
 			};
 		})
 	}
@@ -96,7 +95,19 @@ var LobbyManager = new class {
 			});
 			console.log("index", index);
 			lobby.reset();
+
+			let players = lobby.players.map(e => {
+				return e.client;
+			});
+			players.forEach(function(player) {
+				console.log("player", player.name);
+				self.leaveLobby(player, id);
+			})
+
+
+
 			setTimeout(() => {
+				self._lobbies[index].clear();
 				self._lobbies[index] = undefined;
 				delete self._lobbies[index];
 				self._lobbies.splice(index, 1);
@@ -182,5 +193,8 @@ mp.events.add("LobbyManager:Join", function(player, id, teamIndex) {
 			}
 		}
 	}
+});
+mp.events.add("LobbyManager:deleteLobby", function(lobby_id) {
+	LobbyManager.deleteLobby(lobby_id);
 });
 module.exports = LobbyManager;

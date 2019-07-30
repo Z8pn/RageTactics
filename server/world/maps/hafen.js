@@ -32,7 +32,7 @@ module.exports = {
 	   {hash:mp.joaat("weapon_carbinerifle_mk2"),ammo:300}
    ],
    teams: [{ 
-	   name: "Team Los Santos Vagos",
+	   name: "Los Santos Vagos",
 	   clothing: [
 		   {gender:0,componentNumber:11, drawable:240, texture:1, palette:0},
 		   {gender:0,componentNumber:8, drawable:0, texture:16, palette:0},
@@ -43,7 +43,7 @@ module.exports = {
 	   ],
 	   max:8
    }, {
-	   name: "Team Triaden",
+	   name: "Triaden",
 	   clothing: [
 		   {gender:0,componentNumber:11, drawable:206, texture:0, palette:0},
 		   {gender:0,componentNumber:8, drawable:0, texture:26, palette:0},
@@ -55,7 +55,7 @@ module.exports = {
 	   max:8
    }],
    previewCam:{
-	   x:1028.812 ,y:-3105.215 ,z:5.901,
-	   px:1028.812 ,py:-3105.215 ,pz:55.901
+	   px:1028.812 ,py:-3105.215 ,pz:5.901,
+	   x:1028.812 ,y:-3105.215 ,z:55.901
    }
 }

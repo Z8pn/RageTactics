@@ -81,9 +81,12 @@ class BaseTeamGamemode {
 		self._roundCooldown = 15;
 		console.log(`Created ${self.mode} Lobby`)
 	}
-	notify(string, substring) {
+	get gameTick() {
+		return this._roundDuration;
+	}
+	notify(string, substring,time = 2000) {
 		this.players.forEach(function(player) {
-			player.client.call("Lobby:ShardMessage", [string, substring]);
+			player.client.call("Lobby:ShardMessage", [string, substring,time]);
 		});
 	}
 	tick() {
@@ -125,18 +128,21 @@ class BaseTeamGamemode {
 		this._lobbyWaitCooldown = this._orgLobbyCooldown;
 		this._teamsDead = [];
 		this._round = 1;
+		this.tick = function() {
+			console.log("default game tick");
+		}
 		if (this._cLoaded) {
 			clearInterval(this._cLoaded);
 		}
 		this._score = [];
 		console.log("length", self.players.length)
-		let players = self.players.map(e => {
+		/*let players = self.players.map(e => {
 			return e.client;
 		});
 		players.forEach(function(player) {
 			console.log("player", player.name);
 			LobbyManager.leaveLobby(player, self.id);
-		})
+		})*/
 	}
 	get score() {
 		return this._score;

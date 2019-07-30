@@ -28,7 +28,7 @@ module.exports = {
        {hash:mp.joaat("weapon_carbinerifle_mk2"),ammo:300}
    ],
    teams: [{
-       name: "Team Marabunta Grande",
+       name: "Marabunta Grande",
        clothing: [ 
            {gender:0,componentNumber:11, drawable:189, texture:4, palette:0},
            {gender:0,componentNumber:8, drawable:0, texture:0, palette:0},
@@ -40,7 +40,7 @@ module.exports = {
        ],
        max:8
    }, {
-       name: "Team Bratwa",
+       name: "Bratwa",
        clothing: [
            {gender:0,componentNumber:11, drawable:53, texture:1, palette:0},
            {gender:0,componentNumber:8, drawable:0, texture:16, palette:0},
