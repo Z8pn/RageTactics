@@ -231,6 +231,7 @@ input:focus {
     height: 120%;
     transition: all 0.3s linear;
 }
+
 #lobbies>.lobby>.name {
     position: absolute;
     top: 1.5vh;
@@ -279,6 +280,18 @@ input:focus {
     font-weight: 600;
     letter-spacing: 0.1em;
 }
+#lobbies>.lobby>.mode {
+    position: absolute;
+    top: 10.2vh;
+    left: 1.2vw;
+    color: #FFF;
+    text-shadow: -1px 0 rgba(0, 0, 0, 0.5), 0 1px rgba(0, 0, 0, 0.5), 1px 0 rgba(0, 0, 0, 0.5), 0 -1px rgba(0, 0, 0, 0.5);
+    font-size: 1.2vh;
+    text-transform: uppercase;
+    font-family: Lato;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+}
 #lobbies>.lobby>.status {
     position: absolute;
     bottom: 2vh;
@@ -302,6 +315,39 @@ input:focus {
     font-family: Lato;
     font-weight: 600;
     letter-spacing: 0.1em;
+}
+.abs_button {
+    position: absolute;
+    width: 15vw;
+    background: rgba(0, 183, 24, 0.6);
+    line-height: 15vh;
+    text-align: center;
+    font-family: Lato;
+    font-size: 5vh;
+    color: #FFF;
+    text-shadow: -1px 0 rgba(0, 0, 0, 0.5), 0 1px rgba(0, 0, 0, 0.5), 1px 0 rgba(0, 0, 0, 0.5), 0 -1px rgba(0, 0, 0, 0.5);
+    transition: all 0.1s linear;
+    cursor: pointer;
+}
+.abs_button.bottom_left {
+    left: 0;
+    bottom: 0;
+}
+.abs_button.bottom_right {
+    right: 0;
+    bottom: 0;
+}
+.abs_button:hover {
+    background: rgba(0, 183, 24, 0.8);
+    transition: all 0.1s linear;
+}
+.abs_button.red {
+    background: rgba(183, 15, 0, 0.6);
+    transition: all 0.1s linear;
+}
+.abs_button.red:hover {
+    background: rgba(183, 15, 0, 0.8);
+    transition: all 0.1s linear;
 }
 .modal_front {
     width: 100%;
@@ -364,6 +410,14 @@ input:focus {
     background: rgba(50, 50, 50, 0.4);
     transition: all 0.3s linear;
 }
+#modal_lobby.modal_front>.window>.teams>.list>.team.disabled:hover {
+    background: rgba(150, 50, 50, 0.4);
+    transition: all 0.3s linear;
+}
+#modal_lobby.modal_front>.window>.teams>.list>.team.disabled {
+    background: rgba(200, 50, 50, 0.4);
+    transition: all 0.3s linear;
+}
 #modal_lobby.modal_front>.window>.teams>.list>.team.selected {
     background: rgba(50, 50, 50, 0.6);
 }
@@ -412,91 +466,89 @@ input:focus {
 #modal_lobby.modal_front>.window>.buttons>.button.red {
     background: rgba(214, 67, 64, 0.6);
 }
-
+#model_clobby.modal_front>.window {
+    position: relative;
+    width: 30vw;
+    background: rgba(9, 9, 9, 0.8);
+    left: calc(50% - 15vw);
+    top: calc(50% - 12.5vh);
+    box-shadow: 0px 0px 100px 5px rgba(0, 0, 0, 1);
+}
 #lobby_waiting {
     position: absolute;
-    padding-top:20px;
-    width:40%;
-    left:calc(50% - 20%);
-    background: rgba(0,0,0,0.2);
-
+    padding-top: 20px;
+    padding-bottom: 15px;
+    width: 40%;
+    left: calc(50% - 20%);
+    background: rgba(0, 0, 0, 0.2);
     display: inline-flex;
     flex-wrap: wrap;
     justify-content: space-around;
     align-content: center;
 }
-#lobby_waiting>.info {  
+#lobby_waiting>.info {
     position: absolute;
-    width:100%;
+    width: 100%;
     text-align: center;
-    font-size:16px;
+    font-size: 16px;
     font-family: Lato;
     font-weight: 300;
     letter-spacing: -0.01em;
-    top:5px;
-    color:#FFF;
+    padding-bottom: 20px;
+    line-height: 20px;
+    top: 5px;
+    color: #FFF;
     text-shadow: -1px 2px rgba(0, 0, 0, 0.2), 2px 1px rgba(0, 0, 0, 0.2), 1px 2px rgba(0, 0, 0, 0.2), 2px -1px rgba(0, 0, 0, 0.2);
 }
-#lobby_waiting>.team {  
+#lobby_waiting>.team {
     flex: 1 1;
     position: relative;
-    font-size:16px;
+    font-size: 16px;
     font-family: Lato;
     font-weight: 300;
     letter-spacing: -0.01em;
 }
 #lobby_waiting>.team>.name {
-    width:100%;
-    display:block;
+    width: 100%;
+    display: block;
     text-align: center;
-
-    font-size:20px;
+    font-size: 20px;
     font-family: Lato;
     font-weight: 300;
     letter-spacing: -0.01em;
-
-    padding-top:15px;
-    padding-bottom:15px;
-    color:#FFF;
-
+    padding-top: 15px;
+    padding-bottom: 15px;
+    color: #FFF;
     text-shadow: -1px 2px rgba(0, 0, 0, 0.2), 2px 1px rgba(0, 0, 0, 0.2), 1px 2px rgba(0, 0, 0, 0.2), 2px -1px rgba(0, 0, 0, 0.2);
 }
-
 #lobby_waiting>.team>.players {
-    width:100%;
-    display:block;
+    width: 100%;
+    display: block;
     text-align: center;
 }
-#lobby_waiting>.team>.players >.player{
-    float:left;
-    display:block;
-    width:100%;
-    padding-top:5px;
-    padding-bottom:5px;
+#lobby_waiting>.team>.players>.player {
+    float: left;
+    display: block;
+    width: 100%;
+    padding-top: 5px;
+    padding-bottom: 5px;
 }
-#lobby_waiting>.team>.players >.player>.name{
-    float:left;
-    padding-left:10px;
-    color:#FFF;
-
+#lobby_waiting>.team>.players>.player>.name {
+    float: left;
+    padding-left: 10px;
+    color: #FFF;
     text-shadow: -1px 2px rgba(0, 0, 0, 0.2), 2px 1px rgba(0, 0, 0, 0.2), 1px 2px rgba(0, 0, 0, 0.2), 2px -1px rgba(0, 0, 0, 0.2);
 }
-
-#lobby_waiting>.team>.players >.player>.ping{
-    float:right;
-    color:#FFF;
-
-    display:block;
-    padding-right:10px;
-    
+#lobby_waiting>.team>.players>.player>.ping {
+    float: right;
+    color: #FFF;
+    display: block;
+    padding-right: 10px;
     text-shadow: -1px 2px rgba(0, 0, 0, 0.2), 2px 1px rgba(0, 0, 0, 0.2), 1px 2px rgba(0, 0, 0, 0.2), 2px -1px rgba(0, 0, 0, 0.2);
 }
-#lobby_waiting>.team>.players >.player:last-child {
+#lobby_waiting>.team>.players>.player:last-child {
     padding-bottom: 50px;
 }
-
-
-
 ::-webkit-scrollbar {
     width: 10px;
     display: block;

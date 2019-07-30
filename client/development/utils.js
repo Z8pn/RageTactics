@@ -46,6 +46,15 @@ mp.Vector3.prototype.dist = function(to) {
     let c = this.z - to.z;
     return Math.sqrt(a * a + b * b + c * c);;
 }
+mp.Vector3.prototype.quad = function() {
+    let nVector = new mp.Vector3(this.x, this.y, this.z);
+    nVector.x = Math.sign(this.x) * this.x * this.x;
+    nVector.y = Math.sign(this.y) * this.y * this.y;
+    nVector.z = Math.sign(this.z) * this.z * this.z;
+    return nVector;
+}
+
+
 mp.Vector3.prototype.dist2d = function(to) {
     let a = this.x - to.x;
     let b = this.y - to.y;
@@ -143,6 +152,10 @@ mp.isValid = function(val) {
 mp.lerp = function(a, b, n) {
     return (1 - n) * a + n * b;
 }
+
+
+
+
 mp.game.graphics.drawSpriteAbsolute = function(textureDict, textureName, screenX, screenY, scaleX, scaleY, heading, colorR, colorG, colorB, alpha) {
     //2560x1440
     scaleX = 1.0 / 2560 * scaleX;

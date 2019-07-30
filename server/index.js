@@ -33,6 +33,7 @@ mp.events.add("playerQuit", function(player, exitType, reason) {
 mp.events.add("ServerAccount:Login", function(player, username, password) {
     console.log(players[player.id]);
     if (players[player.id]) {
+        console.log("login 1")
         players[player.id].login(username, password)
     }
 });

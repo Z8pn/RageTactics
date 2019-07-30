@@ -1,3 +1,64 @@
+let enum_count = 1;
+var e = {
+    LOBBY_BALANCE_ERR:enum_count++,
+    LOBBY_CREATING:enum_count++,
+    LOBBY_WAITING:enum_count++,
+    LOBBY_READY:enum_count++,
+    LOBBY_STARTING:enum_count++,
+    LOBBY_PREPARING:enum_count++,
+    LOBBY_RUNNING:enum_count++,
+    LOBBY_COUNTDOWN:enum_count++,
+    LOBBY_COUNTDOWN_5:enum_count++,
+    LOBBY_COUNTDOWN_4:enum_count++,
+    LOBBY_COUNTDOWN_3:enum_count++,
+    LOBBY_COUNTDOWN_2:enum_count++,
+    LOBBY_COUNTDOWN_1:enum_count++,
+    LOBBY_COUNTDOWN_GO:enum_count++,
+    LOBBY_ENDING:enum_count++,
+    LOBBY_NEW_ROUND:enum_count++,
+    LOBBY_NEW_ROUND_STARTING:enum_count++,
+    LOBBY_CLOSING:enum_count++,
+    LOBBY_CLOSED:enum_count++,
+    LOGIN_OK:enum_count++,
+    LOGIN_FAILED:enum_count++,
+    LOGIN_PASSWORD_WRONG:enum_count++,
+    LOGIN_NOT_FOUND:enum_count++,
+    REGISTERED_OK:enum_count++,
+    REGISTERED_FAILED:enum_count++,
+    REGISTERED_PASSWORD_WRONG:enum_count++,
+    REGISTERED_ACCOUNT_EXISTS:enum_count++,
+    KILLED:enum_count++,
+    KILL:enum_count++,
+    LOBBY_LEAVE_SUCCESS:enum_count++,
+    LOBBY_LEAVE_FAIL:enum_count++,
+    LOBBY_JOIN_SUCCESS:enum_count++,
+    LOBBY_NOT_EXISTS:enum_count++,
+    LOBBY_JOIN_FAIL_FULL:enum_count++,
+    LOBBY_JOIN_FAIL_TEAM_INVALID:enum_count++,
+    LOBBY_JOIN_FAIL_TEAM_FULL:enum_count++,
+    LOBBY_PLAYER_NOT_FOUND:enum_count++,
+    LOBBY_MAP_NOT_FOUND:enum_count++,
+    LOBBY_MAP_FOUND:enum_count++,
+    LOBBY_MAP_MODE_INVALID:enum_count++,
+    AUTO_BALANCE:enum_count++,
+    NO_BALANCE:enum_count++,
+    BALANCE_OK:enum_count++,
+}
+
+
+function translate_enum(en) {
+    let enum1 = en.split("translate:")[1];
+    let name = Object.keys(e).find(en1 => {
+        return e[en1] == enum1;
+    })
+
+    return name;
+}
+
+
+
+
+
 $(function() {
     $("body").width($(window).width())
     $("body").height($(window).height())
@@ -89,7 +150,6 @@ var LobbyManager = new class {
         this.view();
     }
     view() {
-        $("#lobbies").html("");
         this._lobbies = this._lobbies.sort(function(a, b) {
             return a.id - b.id;
         })
@@ -108,8 +168,11 @@ var LobbyManager = new class {
                 <div class="map">
                     ${lobby.map}
                 </div>
+                <div class="mode">
+                    ${lobby.mode}
+                </div>
                 <div class="status">
-                    ${lobby.status}
+                    ${translate_enum(lobby.status)}
                 </div>
                 <div class="rounds">
                     Best of ${lobby.rounds}
@@ -121,6 +184,44 @@ var LobbyManager = new class {
         });
         $("#lobbies").html(html);
     }
+    notify(type) {
+        let message = "";
+        let title = "";
+        if (type == 1) 
+            message = "Auto-Balance is on, please join the other Team.";
+
+
+        if (title != "") {
+        iziToast.show({
+            title: '',
+            titleSize: '16px',
+            message: message,
+            theme: 'dark', // dark
+            position: 'bottomCenter' // bottomRight, bottomLeft, topRight, topLeft, topCenter, bottomCenter, center
+        });
+
+
+
+
+    }
+    }
+    balanced(lobby) {
+        let mode = lobby.balance;
+        if (mode == e.AUTO_BALANCE) {
+            let most_player_team = undefined;
+            let most_players = 0;
+            lobby.teams.forEach(function(team, index) {
+                let t_players = team.players;
+                if (t_players > most_players) {
+                    most_players = t_players;
+                    most_player_team = index;
+                }
+            })
+            return most_player_team;
+        } else if (mode == e.NO_BALANCE) {
+            return e.BALANCE_OK;
+        }
+    }
     interact(id) {
         if (this._lobbyView == false) {
             console.log("interact with", id);
@@ -130,9 +231,11 @@ var LobbyManager = new class {
                 $("#modal_lobby").find(".teams > .info").html("Select a Team");
                 // $("#modal_lobby").find(".teams > .list").html("");
                 let html = "";
-                lobby.teams.forEach(function(team, index) {
+                let balance = this.balanced(lobby);
+                console.log("balance",balance);
+                lobby.teams.forEach(function(team, index) {//${balance != index ?"LobbyManager.select_team('${id}',${index})" : "LobbyManager.notify(1)"  }
                     html += `
-                        <div class="team" onclick="LobbyManager.select_team('${id}',${index})">
+                        <div class="team  ${balance != index ? "": "disabled"}" onclick=" ${balance != index ? "LobbyManager.select_team(" + index+ ")" : "LobbyManager.notify(1)"  }">
                             <div class="name">
                                 ${team.name}
                             </div>
@@ -159,7 +262,7 @@ var LobbyManager = new class {
             }
         }
     }
-    select_team(id, team_index) {
+    select_team(team_index) {
         this._selectedTeam = team_index;
         console.log("this._selectedTeam", this._selectedTeam);
         if (this._selectedTeam > -1) {
@@ -184,10 +287,10 @@ var LobbyManager = new class {
     }
     hide() {
         this.close();
-        $("#lobbies").hide();
+        $("#lobby_view").hide();
     }
     show() {
-        $("#lobbies").show();
+        $("#lobby_view").show();
     }
 }
 //LobbyManager.load();
@@ -203,29 +306,21 @@ function cef_loadlobby() {
 function cef_hidelobby() {
     LobbyManager.hide();
 }
-
 let tts;
+
 function cef_hidewaitingLobby() {
     $("#lobby_waiting").hide();
     tts = undefined;
 }
 
-function cef_waitingLobby(teams, timeToStart) {
+function cef_waitingLobby(timeToStart) {
     if (tts == undefined) tts = timeToStart;
-
     let s_string = `<div class="info">Waiting for players...</div>`;
     if (tts != timeToStart) {
         tts = timeToStart;
         s_string = "<div class='info'>Waiting for more players (Starting in " + parseInt(tts) + ")</div>";
     }
     let xHtml = s_string;
-    teams.forEach(function(team) {
-        xHtml += `<div class="team"><div class="name">${team.name}</div><div class="players">`
-        team.players.forEach(function(player) {
-            xHtml += `<div class="player"><div class="name">${player.name}</div><div class="ping">${player.ping}ms</div></div>`
-        })
-        xHtml += `</div></div>`
-    })
     $("#lobby_waiting").html(xHtml);
     $("#lobby_waiting").show();
 }
@@ -243,10 +338,6 @@ function cef_loadlogin(name) {
         $("#login").show();
         $("#login").addClass("show");
     });
-}
-
-function cef_loadlobby() {
-    $("#lobbies").show();
 }
 
 function cef_hidelogin() {
