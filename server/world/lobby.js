@@ -25,12 +25,9 @@ setTimeout(function() {
 }, 1000)
 var LobbyManager = new class {
 	constructor() {
-		this._setup();
+		this._lobbies = [TestLobby1, TestLobby2, TestLobby3];
 	}
-	_setup() {
-		var self = this;
-		self._lobbies = [TestLobby1, TestLobby2, TestLobby3];
-	}
+
 	getLobbyByID(id) {
 		return this._lobbies.find(e => {
 			return e.id == id;
