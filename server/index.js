@@ -15,7 +15,7 @@ mp.events.add("ServerAccount:Ready", function(player) {
     player.position.y = 9000;
 });
 
-       
+
 mp.events.add("playerQuit", function(player, exitType, reason) {
     console.log("disconnect", exitType, reason)
     if (players[player.id]) {
@@ -23,11 +23,11 @@ mp.events.add("playerQuit", function(player, exitType, reason) {
         if (player.interface.lobby) {
             LobbyManager.leaveLobby(player, player.interface.lobby);
         }
-        players[player_id].save().then(function() {
+        player.interface.save().then(function() {
             console.log("saved");
         })
+        console.log(`${player.name} disconnected; Reason ${exitType}`)
         players[player_id] = null;
-        console.log(`${player.name} disconnected Reason ${exitType}`)
     }
 });
 mp.events.add("ServerAccount:Login", function(player, username, password) {
