@@ -16,7 +16,7 @@
 - "Dead"-Bodies displayed properly ( not stuck in the floor )
 - "Combat"-Hitscan thingy
 - "HUB"
-- Map Manager
+- Map Manager ( see ./world/maps/ for references )
 - Object Loading for Lobbies
 - Support for Multiple "Gamemodes" ( check ./server/world/gamemodes for references )
 - Balance for lobbies
