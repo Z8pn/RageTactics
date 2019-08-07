@@ -17,6 +17,9 @@
 - "HUB"
 - Map Manager
 - Object Loading for Lobbies
+- Support for Multiple "Gamemodes" ( check ./server/world/gamemodes for references )
+
+
 
 
 
