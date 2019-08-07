@@ -8,21 +8,22 @@ setTimeout(function() {
 	TestLobby1.setMap("LS Supply");
 	TestLobby1.MaxRounds = 5;
 	TestLobby1.balance = e.AUTO_BALANCE;
-}, 1000)
+}, 5000)
 let TestLobby2 = new TeamElimination();
 setTimeout(function() {
 	TestLobby2.name = "TestLobby2";
 	TestLobby2.setMap("Korz Center");
 	TestLobby2.MaxRounds = 3;
 	TestLobby2.balance = e.NO_BALANCE;
-}, 1000)
+}, 5000)
 let TestLobby3 = new TeamElimination();
 setTimeout(function() {
 	TestLobby3.name = "TestLobby3";
 	TestLobby3.setMap("Hafen");
 	TestLobby3.MaxRounds = 1;
 	TestLobby3.balance = e.AUTO_BALANCE;
-}, 1000)
+	console.log(TestLobby3);
+}, 5000)
 var LobbyManager = new class {
 	constructor() {
 		this._lobbies = [TestLobby1, TestLobby2, TestLobby3];

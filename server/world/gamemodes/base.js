@@ -181,9 +181,10 @@ class BaseTeamGamemode {
 		return this._id;
 	}
 	setMap(mapName) {
+		console.log("setmap");
 		let map = MapManager.getMapData(mapName);
+				console.log("set map",map);
 		if (map) {
-			if (map.mode == this.mode) {
 				this._map = map.name;
 				this._image = map.image;
 				this._maxPlayers = map.max_players;
@@ -193,9 +194,7 @@ class BaseTeamGamemode {
 				this._previewCam = map.previewCam;
 				this.weapons = map.weapons;
 				return e.LOBBY_MAP_FOUND;
-			} else {
-				return e.LOBBY_MAP_MODE_INVALID;
-			}
+
 		} else {
 			return e.LOBBY_MAP_NOT_FOUND
 		}
