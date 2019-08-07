@@ -1,4 +1,5 @@
 # RageTactics
+### still work in progress, you need to do some things yourself to have a fully functional server...
 
 ### Installation!
 
@@ -18,6 +19,7 @@
 - Map Manager
 - Object Loading for Lobbies
 - Support for Multiple "Gamemodes" ( check ./server/world/gamemodes for references )
+- Balance for lobbies
 
 
 
