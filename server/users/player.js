@@ -7,6 +7,18 @@ var HUB = require("../world/hub.js")
 var async = require("async")
 var User = MongoDB.getUserModel();
 var Kills = MongoDB.getKillModel();
+
+
+
+
+
+mp.Player.prototype.__defineGetter__("interface", function() {
+    if (!this.interface_class)
+        this.interface_class = new Player(this);
+
+    return this.interface_class;
+});
+
 var Player = class {
     constructor(player) {
         this._setup(player);
@@ -304,6 +316,11 @@ var Player = class {
         })
     }
 }
+
+
+
+
+
 mp.events.add("Combat:FireWeapon", function(player, currentWeapon, remainingAmmo) {
     if (player.interface) {
         console.log("Combat:FireWeapon", currentWeapon, remainingAmmo);

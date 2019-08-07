@@ -6,19 +6,22 @@ var LobbyManager = require("./world/lobby.js")
 var Lobby = require("./users/lobby.js")
 var getDeathReason = require("./libs/death_reasons.js")
 var players = [];
+
+
+
+
 mp.events.add("ServerAccount:Ready", function(player) {
     player.setVariable("loggedIn", false);
-    players[player.id] = new PlayerClass(player);
-    player.interface = players[player.id]
     player.call("Server:RequestLogin");
     player.position.x = 9000;
     player.position.y = 9000;
+
 });
 
 
 mp.events.add("playerQuit", function(player, exitType, reason) {
     console.log("disconnect", exitType, reason)
-    if (players[player.id]) {
+    if (player.interface) {
         let player_id = player.id;
         if (player.interface.lobby) {
             LobbyManager.leaveLobby(player, player.interface.lobby);
@@ -31,16 +34,16 @@ mp.events.add("playerQuit", function(player, exitType, reason) {
     }
 });
 mp.events.add("ServerAccount:Login", function(player, username, password) {
-    console.log(players[player.id]);
-    if (players[player.id]) {
+    console.log(player.interface);
+    if (player.interface) {
         console.log("login 1")
-        players[player.id].login(username, password)
+        player.interface.login(username, password)
     }
 });
 mp.events.add("ServerAccount:Register", function(player, username, password) {
-    console.log(players[player.id]);
-    if (players[player.id]) {
-        players[player.id].register(username, password)
+    console.log(player.interface);
+    if (player.interface) {
+        player.interface.register(username, password)
     }
 });
 

@@ -13,9 +13,7 @@ class mongodb {
         self._conncted = false;
         mongoose.connect('mongodb://localhost/RagaTactics?authSource=admin', {
             useCreateIndex: true,
-            useNewUrlParser: true/*,
-            user: 'RootGangwar',
-            pass: 'S§F_yJ5nQpaTw#SS'*/
+            useNewUrlParser: true
         });
         self._db = mongoose.connection;
         self._db.on('error', console.error.bind(console, 'connection error:'));
