@@ -1,5 +1,5 @@
 # RageTactics
-# This is not finished, you need to do some things yourself to have a fully functional server...
+### still work in progress, you need to do some things yourself to have a fully functional server...
 
 ### Installation!
 
