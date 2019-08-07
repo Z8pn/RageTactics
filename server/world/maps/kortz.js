@@ -28,7 +28,7 @@ module.exports = {
 		    x:-2290.640 ,y:373.335 , z:171.601,
 			rx:0,
 			ry:0,
-			rz:0 
+			rz:0
 	},
 	{
 			model:"ng_proc_tyre_01",
@@ -92,7 +92,7 @@ module.exports = {
 		{team:1,x:-2197.071 ,y:233.001 , z:174.602 ,heading:0}
 	],
 	max_players: 16,
-	image: "https://cdn.discordapp.com/attachments/597607496357642250/601864455231373322/Grand_Theft_Auto_V_Screenshot_2019.07.19_-_21.46.45.46.png",
+	image: "https://i.imgur.com/tbLGQgG.jpg",
 	weapons:[
 		{hash:mp.joaat("weapon_pistol_mk2"),ammo:40},
 		{hash:mp.joaat("weapon_pumpshotgun_mk2"),ammo:20},

@@ -21,7 +21,7 @@ module.exports = {
        {team:1,x:1138.896 ,y:-1356.765 ,z:34.660,heading:181.167}
    ],
    max_players: 16,
-   image: "https://cdn.discordapp.com/attachments/597607496357642250/601864427028873217/Grand_Theft_Auto_V_Screenshot_2019.07.19_-_21.40.15.24.png",
+   image: "https://i.imgur.com/oPY344S.jpg",
    weapons:[
        {hash:mp.joaat("weapon_pistol_mk2"),ammo:100},
        {hash:mp.joaat("weapon_pumpshotgun_mk2"),ammo:10},
@@ -29,7 +29,7 @@ module.exports = {
    ],
    teams: [{
        name: "Marabunta Grande",
-       clothing: [ 
+       clothing: [
            {gender:0,componentNumber:11, drawable:189, texture:4, palette:0},
            {gender:0,componentNumber:8, drawable:0, texture:0, palette:0},
            {gender:0,componentNumber:7, drawable:50, texture:0, palette:0},
